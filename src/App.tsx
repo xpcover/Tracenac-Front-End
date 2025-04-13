@@ -47,6 +47,9 @@ import CreateImpairmentRecordPage from './pages/create-reports/CreateImpairmentR
 import CreateLeasePage from './pages/create-reports/CreateLeasePage';
 import CreateWipAssetPage from './pages/create-reports/CreateWipAssetPage';
 import CreateShiftUsagePage from './pages/create-reports/CreateShiftUsagePage';
+import Map from './pages/leaflet-map/Map';
+import DashboardPage from './pages/dashboard/DashboardPage';
+import BarCodeGenerate from './pages/short-urls/generate-barcode/BarCodeGenerate';
 
 function App() {
   return (
@@ -63,7 +66,7 @@ function App() {
           }
         >
           <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<div className="text-2xl font-bold">Welcome to the Dashboard</div>} />
+          <Route path="dashboard" element={<DashboardPage/>} />
           
           {/* Top Bar Menu Routes */}
           <Route path="setup" element={<SetupPage />} />
@@ -105,7 +108,10 @@ function App() {
           <Route path="short-urls" element={<ShortUrlsPage />} />
           <Route path="short-urls/create" element={<CreateShortUrlPage />} />
           <Route path="short-urls/bulk" element={<BulkCreateUrlPage />} />
+          <Route path="short-urls/generate-barcode" element={<BarCodeGenerate />} />
 
+          <Route path="map" element={<Map />} />
+          
           {/* Create Reports Routes */}
           <Route path="create-reports/asset-history" element={<CreateAssetHistoryPage />} />
           <Route path="create-reports/barcode-scan" element={<CreateBarcodeScanPage />} />

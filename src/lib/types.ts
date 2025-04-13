@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { DivideIcon as LucideIcon } from 'lucide-react'
+import { te } from 'date-fns/locale'
 
 // Base interfaces
 export interface MenuItem {
@@ -151,6 +152,7 @@ export const assetSchema = z.object({
 export const assetComponentSchema = z.object({
   asset_id: z.string().min(1, 'Asset ID is required'),
   parent_component_id: z.string().nullable(),
+  component_id: z.string().min(1, 'Component ID is required'),
   component_name: z.string().min(1, 'Component name is required'),
   component_type: z.string().min(1, 'Component type is required'),
   purchase_cost: z.number().min(0, 'Purchase cost must be positive'),
@@ -160,6 +162,7 @@ export const assetComponentSchema = z.object({
   useful_life: z.number().min(0, 'Useful life must be positive'),
   salvage_value: z.number().min(0, 'Salvage value must be positive'),
   status: z.string().min(1, 'Status is required'),
+  tenant_id: z.string().min(1, 'Tenant ID is required'),
 })
 
 export type Asset = z.infer<typeof assetSchema>

@@ -48,14 +48,20 @@ export const menuItems: MenuItem[] = [
     children: [
       {
         icon: History,
-        label: 'Create Single URL',
+        label: 'Single URL',
         to: '/short-urls/create',
         requiredPermissions: ['ADD_ASSET_HISTORY']
       },
       {
         icon: History,
-        label: 'Create Bulk URL',
+        label: 'Bulk URL',
         to: '/short-urls/bulk',
+        requiredPermissions: ['ADD_ASSET_HISTORY']
+      },
+      {
+        icon: Barcode,
+        label: 'Generate Barcode',
+        to: '/short-urls/generate-barcode',
         requiredPermissions: ['ADD_ASSET_HISTORY']
       },
     ]
@@ -65,7 +71,7 @@ export const menuItems: MenuItem[] = [
     label: 'Create Reports',
     to: '/create-reports/asset-history',
     requiredPermissions: ['VIEW_CREATE_REPORTS'],
-    
+  },
       // {
       //   icon: Barcode,
       //   label: 'Add Barcode Scan',
@@ -97,7 +103,7 @@ export const menuItems: MenuItem[] = [
       //   requiredPermissions: ['VIEW_SHIFT_USAGE']
       // }
     
-  },
+  // },
   { 
     icon: PieChart, 
     label: 'Report List', 
