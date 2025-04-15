@@ -81,6 +81,7 @@ export default function RolesPage() {
 
       const data = await response.json();
       console.log("Data",data)
+      
       const mappedRoles = data.msg.map((role: any) => ({
         role_id: role._id,
         tenant_id: role.tenantId,
@@ -145,8 +146,6 @@ export default function RolesPage() {
         }
         const response = await axios.post('http://localhost:4000/api/tenant/roles', newRole);
         console.log('Added role:', response.data);
-        // // const { msg } = response.data;
-        // // setRoles(prevRoles => [...prevRoles, msg]);
         if (response.data.status === true) {
             fetchRoles();
         }
@@ -203,13 +202,13 @@ export default function RolesPage() {
 <RoleForm
   role={editingRole}
   onSubmit={(data) => {
-    handleAddRole(data);
-    // if (editingRole) {
-    //   editRole({ ...editingRole, ...data });
-    // }
-    // else {
-    //   handleAddRole(data);
-    // }
+    // handleAddRole(data);
+    if (editingRole) {
+      editRole({ ...editingRole, ...data });
+    }
+    else {
+      handleAddRole(data);
+    }
     console.log('Form submitted:', data);
     setIsModalOpen(false);
     setEditingRole(null);

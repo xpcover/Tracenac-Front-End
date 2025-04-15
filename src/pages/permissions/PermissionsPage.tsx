@@ -37,7 +37,7 @@ const mockRoles: Role[] = [
 ]
 
 export default function PermissionsPage() {
-  const [roles, setRoles] = useState<Role[]>(mockRoles)
+  const [roles, setRoles] = useState<Role[]>()
   const [selectedRole, setSelectedRole] = useState<Role | null>(null)
   const [showAddRoleModal, setShowAddRoleModal] = useState(false)
   const [newRoleName, setNewRoleName] = useState('')

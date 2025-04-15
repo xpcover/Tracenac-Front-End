@@ -30,7 +30,7 @@ export default function UserForm({ user, onSubmit }: UserFormProps) {
     // Fetch roles from the API
     const fetchRoles = async () => {
       try {
-        const response = await fetch('https://api.tracenac.com/api/tenant/get-roles', {
+        const response = await fetch('http://localhost:4000/api/tenant/get-roles', {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
           },
@@ -66,38 +66,44 @@ export default function UserForm({ user, onSubmit }: UserFormProps) {
     },
   })
 
-  const onSubmitForm = async (data: UserFormData) => {
-    const { username, password, first_name, last_name, email, is_active, userRole } = data
-    const userData = {
-      name: `${first_name} ${last_name}`,
-      email,
-      phone: '1234567890', // Replace with actual phone field if available
-      password,
-      userRole,
-    }
-
-    try {
-      const response = await fetch('https://api.tracenac.com/api/user/add', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify(userData),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to Add Employee')
-      }
-
-      alert('User added successfully')
-    } catch (error) {
-      console.error('Error adding user:', error)
-    }
-  }
+  // const onSubmitForm = async (data: UserFormData) => {
+  //   const { username, password, first_name, last_name, email, is_active, userRole } = data;
+  //   const userData = {
+  //     name: `${first_name} ${last_name}`,
+  //     username,
+  //     email,
+  //     phone: '1234567890', // Replace with actual phone field if available
+  //     password,
+  //     userRole,
+  //   };
+  
+  //   try {
+  //     const response = await axios.post(
+  //       'http://localhost:4000/api/user/add',
+  //       userData,
+  //       {
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //           'Authorization': `Bearer ${localStorage.getItem('token')}`,
+  //         },
+  //       }
+  //     );      
+  
+  //     if (response.data.status === true) {
+  //       set
+  //     }
+  
+  //     // Handle success, e.g., show a success message
+  //     // alert('User added successfully');
+  //   } catch (error) {
+  //     console.error('Error adding user:', error);
+  //     // Handle error, e.g., show an error message to the user
+  //   }
+  // };
+  
 
   return (
-    <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
         <label htmlFor="username" className="block text-sm font-medium text-gray-700">
           Username
