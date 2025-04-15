@@ -133,6 +133,28 @@ export default function RolesPage() {
       // You can show an error message to the user
     }
   };
+
+  const handleAddRole = async (data:any) => {
+    try {
+        // console.log('Adding role:', newRole);
+        const tenantId = localStorage.getItem('tenantId'); 
+        const newRole ={
+            name: data.role_name,
+            description:data.description,
+            tenanatId : tenantId
+        }
+        const response = await axios.post('http://localhost:4000/api/tenant/roles', newRole);
+        console.log('Added role:', response.data);
+        // // const { msg } = response.data;
+        // // setRoles(prevRoles => [...prevRoles, msg]);
+        if (response.data.status === true) {
+            fetchRoles();
+        }
+    } catch (error) {
+        console.error('Error adding role:', error);
+    }
+};
+  
   
 
   const handleDelete = async(role: Role) => {
@@ -181,9 +203,13 @@ export default function RolesPage() {
 <RoleForm
   role={editingRole}
   onSubmit={(data) => {
-    if (editingRole) {
-      editRole({ ...editingRole, ...data });
-    }
+    handleAddRole(data);
+    // if (editingRole) {
+    //   editRole({ ...editingRole, ...data });
+    // }
+    // else {
+    //   handleAddRole(data);
+    // }
     console.log('Form submitted:', data);
     setIsModalOpen(false);
     setEditingRole(null);

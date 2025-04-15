@@ -29,6 +29,7 @@ export default function RoleForm({ role, onSubmit }: RoleFormProps) {
       description: role?.description || '',
     },
   })
+  console.log("role", role)
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
