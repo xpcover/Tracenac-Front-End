@@ -1,7 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
-import LoginForm from './components/auth/LoginForm';
+import SuperAdminLogInForm from './components/auth/SuperAdminForm';
 import TenantLoginForm from './components/auth/TenantLogin';
+import UserLoginForm from './components/auth/UserLogInForm';
 import RequireAuth from './components/auth/RequireAuth';
 
 import SetupPage from './pages/setup/SetupPage';
@@ -39,7 +40,7 @@ import ShortUrlsPage from './pages/short-urls/ShortUrlsPage';
 import CreateShortUrlPage from './pages/short-urls/CreateShortUrlPage';
 import BulkCreateUrlPage from './pages/short-urls/BulkCreateUrlPage';
 import PartnersPage from './pages/partner/PartnerForm';
-import PartnerList from './pages/partner/PartnerList';
+import PartnerList from './pages/partner/PartnerPage';
 // Create Reports Pages
 import CreateAssetHistoryPage from './pages/create-reports/CreateAssetHistoryPage';
 import CreateBarcodeScanPage from './pages/create-reports/CreateBarcodeScanPage';
@@ -52,8 +53,9 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<LoginForm />} />
+        <Route path="/admin-login" element={<SuperAdminLogInForm />} />
         <Route path="/tenant-login" element={<TenantLoginForm />} />
+        <Route path="/user-login" element={<UserLoginForm/>} /> 
         <Route
           path="/"
           element={
@@ -71,7 +73,7 @@ function App() {
           <Route path="profile" element={<ProfilePage />} />
           
           {/* Main Menu Routes */}
-          <Route path="partner" element={<PartnersPage />} />
+          {/* <Route path="partner" element={<PartnersPage />} /> */}
           <Route path="partner-list" element={<PartnerList />} />
 
           <Route path="tenants" element={<TenantsPage />} />

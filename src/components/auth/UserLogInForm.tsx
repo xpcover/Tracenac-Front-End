@@ -4,7 +4,7 @@ import {  Lock, User } from 'lucide-react';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 
-export default function TenantLoginForm() {
+export default function UserLoginForm() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
@@ -17,7 +17,7 @@ export default function TenantLoginForm() {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:4000/api/tenant/authenticate', {
+      const response = await fetch('http://localhost:4000/api/user/auth', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

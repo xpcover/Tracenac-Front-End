@@ -78,7 +78,8 @@ export default function UsersPage() {
         const mappedRoles = data.msg.map((user: any) => ({
           id: user.id,
           tenant_id: user.tenantId,
-          firstname:user.firstname,
+          // username:user
+          firstname:user.firstName,
           name: user.name,
           phone:user.phone,
           email: user.email,
@@ -97,9 +98,12 @@ export default function UsersPage() {
   // const { username, password, first_name, last_name, email, is_active, userRole } = data
 
   const handleAddUser = async (data:any) => {
+    console.log("User",data)
     const { username, password, first_name, last_name, email, userRole } = data;
     const userData = {
       name: `${first_name} ${last_name}`,
+      first_name,
+      last_name,
       username,
       email,
       phone: '1234567890', // Replace with actual phone field if available

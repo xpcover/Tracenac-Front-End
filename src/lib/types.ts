@@ -51,6 +51,24 @@ export interface User {
   updated_at: string
 }
 
+export interface Partner{
+  id:string,
+  partnerId : string,
+  partnerName : string,   
+  partnerCategory : string,
+  city : string,
+  pincode : string,
+  email : string,        
+  phone : string,
+  country : string,
+  company : string,
+  lat : string,
+  long : string,
+  assignedPerson : string[],
+  created_at : string,
+  updated_at : string,
+}
+
 export interface Role {
   role_id: string
   tenant_id: string

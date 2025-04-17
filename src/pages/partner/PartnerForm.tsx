@@ -1,137 +1,95 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
-import { PageHeader } from '@/components/ui/PageHeader';
-import { useNavigate } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react';
+import { Partner,User } from '@/lib/types'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 
-interface User {
-  id: string;
-  name: string;
+// partnerId: partner.partnerId,
+// partnerName: partner.partnerName,
+// partnerCategory: partner.partnerCategory,
+// email: partner.partnerUserEmailId,
+// phone: partner.partnerAppUserPhoneNo,
+// pincode: partner.pincode,
+// country: partner.country,
+// city: partner.city,
+// company: partner.company,
+// created_at: partner.createdAt
+
+const PartnerSchema = z.object({
+  partnerId: z.string().min(1, 'Partner ID is required'),
+  partnerName: z.string().min(1, 'Partner Name is required'),
+  partnerCategory: z.string().min(1, 'Partner Category is required'),
+  city: z.string().min(1, 'City is required'),
+  pincode: z.string().min(1, 'Pin Code is required'),
+  country: z.string().min(1, 'Country is required'),
+  company: z.string().min(1, 'Company is required'),
+  partnerUserEmailId: z.string().min(1,'Invalid email address'),
+  partnerAppUserPhoneNo: z.string().min(1, 'Phone number is require,d'),
+  latitude:z.string().min(1,'latitude is required'),
+  longitude:z.string().min(1,'latitude is required'),
+  assignedPerson: z.string().min(1, "Assigned is required")
+})
+
+type PartnerFormData = z.infer<typeof PartnerSchema>
+
+interface PartnerFormProps{
+  partner?: Partner | null
+  onSubmit: (data: PartnerFormData) => void
+  users?: any 
 }
 
-const CreatePartnerForm: React.FC = () => {
-    const navigate = useNavigate()
-
-  const [partnerId, setPartnerId] = useState('');
-  const [partnerName, setPartnerName] = useState('');
-  const [partnerCategory, setPartnerCategory] = useState('');
-  const [city, setCity] = useState('');
-  const [pincode, setPincode] = useState('');
-  const [partnerUserEmailId, setPartnerUserEmailId] = useState('');
-  const [partnerAppUserPhoneNo, setPartnerAppUserPhoneNo] = useState('');
-  const [country, setCountry] = useState('');
-  const [company, setCompany] = useState('');
-  const [lat, setLat] = useState('');
-  const [long, setLong] = useState('');
-  const [assignedPerson, setAssignedPerson] = useState('');
-  const [users, setUsers] = useState<User[]>([]);
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      console.error('No token found');
-      return;
-    }
-
-    try {
-      const response = await fetch('https://api.tracenac.com/api/user', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch users');
-      }
-
-      const data = await response.json();
-      setUsers(data.msg);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-    }
-  };
+export default function PartnerForm({ partner,onSubmit,users }:PartnerFormProps) {
+  // console.log(partner)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+  } = useForm<PartnerFormData>({
+    resolver: zodResolver(PartnerSchema),
+    defaultValues: {
+      partnerId: partner?.partnerId || '',
+      partnerName: partner?.partnerName || '',
+      partnerCategory:partner?.partnerCategory || '',
+      city: partner?.city || '',
+      pincode : partner?.pincode || '',
+      country: partner?.country || '',
+      company : partner?.company || '',
+      partnerUserEmailId : partner?.email || '',
+      partnerAppUserPhoneNo : partner?.phone || '',
+      latitude: partner?.lat || '',
+      longitude : partner?.long || ''
+    },
+  })
+  console.log("Partner", partner)
 
   const handleGetLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
-        setLat(position.coords.latitude.toString());
-        setLong(position.coords.longitude.toString());
+        setValue("latitude", position.coords.latitude.toString());
+        setValue("longitude", position.coords.longitude.toString());
       });
     } else {
       console.error('Geolocation is not supported by this browser.');
     }
   };
+  
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const token = localStorage.getItem('token');
-    if (!token) {
-      console.error('No token found');
-      return;
-    }
-
-    const partnerData = {
-      partnerId,
-      partnerName,
-      partnerCategory,
-      city,
-      pincode,
-      partnerUserEmailId,
-      partnerAppUserPhoneNo,
-      country,
-      company,
-      lat,
-      long,
-    };
-
-    try {
-      const response = await fetch('https://api.tracenac.com/api/partner', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(partnerData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create partner');
-      }
-
-      alert('Partner created successfully');
-    } catch (error) {
-      console.error('Error creating partner:', error);
-    }
-  };
 
   return (
-    <div className="space-y-6">
-    <PageHeader
-      title="Add Partner"
-      description="Create a new partner"
-    >
-      <Button variant="ghost" onClick={() => navigate('/asset-history')}>
-        <ArrowLeft className="w-4 h-4 mr-2" />
-        Back to Partners
-      </Button>
-    </PageHeader>
-    <div className="max-w-3xl mx-auto" >
-        <div className="bg-white rounded-lg shadow " style={{ padding: '50px' }}>
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
         <label htmlFor="partnerId" className="block text-sm font-medium text-gray-700">
           Partner ID
         </label>
         <Input
           id="partnerId"
-          value={partnerId}
-          onChange={(e) => setPartnerId(e.target.value)}
+          type= "partnerId"
+          {...register("partnerId")}
+          // value={partnerId}
+          // onChange={(e) => setPartnerId(e.target.value)}
           className="mt-1"
         />
       </div>
@@ -142,8 +100,10 @@ const CreatePartnerForm: React.FC = () => {
         </label>
         <Input
           id="partnerName"
-          value={partnerName}
-          onChange={(e) => setPartnerName(e.target.value)}
+          type= "partnerName"
+          {...register("partnerName")}
+          // value={partnerName}
+          // onChange={(e) => setPartnerName(e.target.value)}
           className="mt-1"
         />
       </div>
@@ -154,8 +114,10 @@ const CreatePartnerForm: React.FC = () => {
         </label>
         <Input
           id="partnerCategory"
-          value={partnerCategory}
-          onChange={(e) => setPartnerCategory(e.target.value)}
+          type= "partnerCategory"
+          {...register("partnerCategory")}
+          // value={partnerCategory}
+          // onChange={(e) => setPartnerCategory(e.target.value)}
           className="mt-1"
         />
       </div>
@@ -166,8 +128,10 @@ const CreatePartnerForm: React.FC = () => {
         </label>
         <Input
           id="city"
-          value={city}
-          onChange={(e) => setCity(e.target.value)}
+          type= "city"
+          {...register("city")}
+          // value={city}
+          // onChange={(e) => setCity(e.target.value)}
           className="mt-1"
         />
       </div>
@@ -178,8 +142,10 @@ const CreatePartnerForm: React.FC = () => {
         </label>
         <Input
           id="pincode"
-          value={pincode}
-          onChange={(e) => setPincode(e.target.value)}
+          type= "pincode"
+          {...register("pincode")}
+          // value={pincode}
+          // onChange={(e) => setPincode(e.target.value)}
           className="mt-1"
         />
       </div>
@@ -190,9 +156,10 @@ const CreatePartnerForm: React.FC = () => {
         </label>
         <Input
           id="partnerUserEmailId"
-          type="email"
-          value={partnerUserEmailId}
-          onChange={(e) => setPartnerUserEmailId(e.target.value)}
+          type= "partnerUserEmailId"
+          {...register("partnerUserEmailId")}
+          // value={partnerUserEmailId}
+          // onChange={(e) => setPartnerUserEmailId(e.target.value)}
           className="mt-1"
         />
       </div>
@@ -203,8 +170,10 @@ const CreatePartnerForm: React.FC = () => {
         </label>
         <Input
           id="partnerAppUserPhoneNo"
-          value={partnerAppUserPhoneNo}
-          onChange={(e) => setPartnerAppUserPhoneNo(e.target.value)}
+          type= "partnerAppUserPhoneNo"
+          {...register("partnerAppUserPhoneNo")}
+          // value={partnerAppUserPhoneNo}
+          // onChange={(e) => setPartnerAppUserPhoneNo(e.target.value)}
           className="mt-1"
         />
       </div>
@@ -215,8 +184,10 @@ const CreatePartnerForm: React.FC = () => {
         </label>
         <Input
           id="country"
-          value={country}
-          onChange={(e) => setCountry(e.target.value)}
+          type= "country"
+          {...register("country")}
+          // value={country}
+          // onChange={(e) => setCountry(e.target.value)}
           className="mt-1"
         />
       </div>
@@ -227,8 +198,10 @@ const CreatePartnerForm: React.FC = () => {
         </label>
         <Input
           id="company"
-          value={company}
-          onChange={(e) => setCompany(e.target.value)}
+          type= "company"
+          {...register("company")}
+          // value={company}
+          // onChange={(e) => setCompany(e.target.value)}
           className="mt-1"
         />
       </div>
@@ -239,8 +212,11 @@ const CreatePartnerForm: React.FC = () => {
         </label>
         <Input
           id="lat"
-          value={lat}
-          onChange={(e) => setLat(e.target.value)}
+          type= "latitude"
+          {...register("latitude")}
+          defaultValue={partner?.lat || ''}
+          // value={lat}
+          // onChange={(e) => setLat(e.target.value)}
           className="mt-1"
           readOnly
         />
@@ -252,8 +228,11 @@ const CreatePartnerForm: React.FC = () => {
         </label>
         <Input
           id="long"
-          value={long}
-          onChange={(e) => setLong(e.target.value)}
+          type= "longitude"
+          {...register("longitude")}
+          defaultValue={partner?.long || ''}
+          // value={long}
+          // onChange={(e) => setLong(e.target.value)}
           className="mt-1"
           readOnly
         />
@@ -262,35 +241,29 @@ const CreatePartnerForm: React.FC = () => {
       <Button type="button" onClick={handleGetLocation} className="mt-2">
         Get Location
       </Button>
-
       <div>
-        <label htmlFor="assignedPerson" className="block text-sm font-medium text-gray-700">
-          Assigned Person
-        </label>
-        <select
-          id="assignedPerson"
-          value={assignedPerson}
-          onChange={(e) => setAssignedPerson(e.target.value)}
-          className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-        >
-          <option value="">Select</option>
-          {users.map((user) => (
-            <option key={user.id} value={user.id}>
-              {user.name}
-            </option>
-          ))}
-        </select>
-      </div>
+  <label htmlFor="assignedPerson" className="block text-sm font-medium text-gray-700">
+    Assigned Person
+  </label>
+  <select
+    id="assignedPerson"
+    {...register("assignedPerson")}  // <-- ✅ register goes here
+    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+  >
+    <option value="">Select</option>
+    {users?.map((user: any) => (
+      <option key={user.id} value={user.id}>
+        {user.name}
+      </option>
+    ))}
+  </select>
+</div>
+
 
       <Button type="submit" className="mt-4">
         Save Partner
       </Button>
     </form>
-    </div>
-      </div>
-      </div>
-
-  );
+  )
 };
 
-export default CreatePartnerForm;

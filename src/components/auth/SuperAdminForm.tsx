@@ -4,7 +4,7 @@ import {  Lock, User } from 'lucide-react';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 
-export default function LoginForm() {
+export default function SuperAdminLogInForm() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
@@ -17,7 +17,7 @@ export default function LoginForm() {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:4000/api/user/auth', {
+      const response = await fetch('http://localhost:4000/api/admin/superadmin-login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -57,7 +57,7 @@ export default function LoginForm() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
+            Sign in to your accoun
           </h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

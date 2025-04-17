@@ -7,7 +7,7 @@ const RequireAuth = ({ children }: { children: JSX.Element }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      navigate('/login');
+      navigate('/tenant-login');
     }
   }, [navigate]);
 

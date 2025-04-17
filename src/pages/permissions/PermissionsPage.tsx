@@ -37,8 +37,9 @@ const mockRoles: Role[] = [
 ]
 
 export default function PermissionsPage() {
-  const [roles, setRoles] = useState<Role[]>()
+  const [roles, setRoles] = useState<Role[]>([])
   const [selectedRole, setSelectedRole] = useState<Role | null>(null)
+  console.log("Select Role",selectedRole)
   const [showAddRoleModal, setShowAddRoleModal] = useState(false)
   const [newRoleName, setNewRoleName] = useState('')
 
@@ -46,7 +47,7 @@ export default function PermissionsPage() {
     // Fetch roles from the API
     const fetchRoles = async () => {
       try {
-        const response = await fetch('https://api.tracenac.com/api/tenant/get-roles', {
+        const response = await fetch('http://localhost:4000/api/tenant/get-roles', {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
           },
@@ -65,6 +66,7 @@ export default function PermissionsPage() {
 
     fetchRoles()
   }, [])
+  console.log("Role",roles)
 
   const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const roleName = e.target.value
@@ -122,8 +124,8 @@ export default function PermissionsPage() {
     if (!selectedRole) return
 
     try {
-      const response = await fetch('https://api.tracenac.com/api/tenant/roles', {
-        method: 'POST',
+      const response = await fetch(`http://localhost:4000/api/tenant/role/${selectedRole.id}`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

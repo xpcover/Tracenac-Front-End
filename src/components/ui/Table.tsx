@@ -157,7 +157,7 @@ export function DataTable<TData, TValue>({
                           onClick={() => onEdit(row.original)}
                           className="text-blue-600 hover:text-blue-800"
                         >
-                          Edit
+                          View
                         </button>
                       )}
                       {onDelete && (
