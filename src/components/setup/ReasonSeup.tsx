@@ -374,7 +374,7 @@ export function ReasonSetup() {
                     </Button>
                   </div>
                 )}
-                {!field.isDefault && (
+                {field.isDefault && (
                   <Button
                     variant="ghost"
                     onClick={() => {

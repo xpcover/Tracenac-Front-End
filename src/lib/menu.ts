@@ -48,20 +48,20 @@ export const menuItems: MenuItem[] = [
     children: [
       {
         icon: History,
-        label: 'Single URL',
-        to: '/short-urls/create',
+        label: 'Single URLs',
+        to: '/short-urls',
         requiredPermissions: ['ADD_ASSET_HISTORY']
       },
       {
         icon: History,
-        label: 'Bulk URL',
-        to: '/short-urls/bulk',
+        label: 'Bulk URLs',
+        to: '/bulk-urls',
         requiredPermissions: ['ADD_ASSET_HISTORY']
       },
       {
         icon: Barcode,
         label: 'Generate Barcode',
-        to: '/short-urls/generate-barcode',
+        to: '/generate-barcode',
         requiredPermissions: ['ADD_ASSET_HISTORY']
       },
     ]

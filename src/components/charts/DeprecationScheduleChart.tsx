@@ -55,7 +55,7 @@ const data = {
 };
 
 export function DeprecationScheduleChart() {
-  return <div>
+  return <div className='bg-white shadow-md px-1 py-3 rounded-lg'>
       <Line options={options} data={data} />
     </div>
 }

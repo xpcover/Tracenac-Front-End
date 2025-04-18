@@ -24,17 +24,17 @@ const columnHelper = createColumnHelper<ShortUrl>()
 
 const columns = [
   columnHelper.accessor('shortUrl', {
-    header: 'Short URL',
+    header: 'Bulk URL',
     cell: (info) => (
       <div className="flex items-center gap-2">
-        <a
-          href={info.getValue()}
+        <Link
+          to={info.getValue()}
           target="_blank"
           rel="noopener noreferrer"
           className="text-blue-600 hover:text-blue-800"
         >
           {info.getValue()}
-        </a>
+        </Link>
         <button
           onClick={() => navigator.clipboard.writeText(info.getValue())}
           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -105,41 +105,44 @@ const mockUrls: ShortUrl[] = [
   },
 ]
 
-export default function ShortUrlsPage() {
-  const [selectedUrl, setSelectedUrl] = useState<string | null>(null)
 
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Single URLs"
-        description="Create and manage shortened URLs for assets"
-      >
-        <div className="flex gap-2 mt-3">
-          <Link
-            to="/short-urls/create"
-            className="inline-flex items-center justify-center h-10 px-6 font-medium rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 bg-blue-600 text-white hover:bg-blue-700"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Single URL
-          </Link>
-        </div>
-      </PageHeader>
+function BulkUrlListPage() {
+    const [selectedUrl, setSelectedUrl] = useState<string | null>(null)
 
-      <DataTable
-        columns={columns}
-        data={mockUrls}
-        meta={{
-          onViewQrCode: (url: string) => setSelectedUrl(url),
-        }}
-      />
-
-      {selectedUrl && (
-        <QrCodeModal
-          isOpen={true}
-          onClose={() => setSelectedUrl(null)}
-          url={selectedUrl}
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Bulk URLs"
+          description="Create and manage bulk URLs for assets"
+        >
+          <div className="flex gap-2 mt-3">
+            <Link
+              to="/bulk-urls/create"
+              className="inline-flex items-center justify-center h-10 px-6 font-medium rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 bg-blue-600 text-white hover:bg-blue-700"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Bulk URL
+            </Link>
+          </div>
+        </PageHeader>
+  
+        <DataTable
+          columns={columns}
+          data={mockUrls}
+          meta={{
+            onViewQrCode: (url: string) => setSelectedUrl(url),
+          }}
         />
-      )}
-    </div>
-  )
+  
+        {selectedUrl && (
+          <QrCodeModal
+            isOpen={true}
+            onClose={() => setSelectedUrl(null)}
+            url={selectedUrl}
+          />
+        )}
+      </div>
+    )
 }
+
+export default BulkUrlListPage

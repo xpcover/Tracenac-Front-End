@@ -60,7 +60,7 @@ export const data = {
 };
 
 export function UsageReport() {
-  return <div>
+  return <div className='bg-white shadow-md px-1 py-3 rounded-lg'>
     <Bar options={options} data={data} />
   </div>;
 }

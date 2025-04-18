@@ -81,7 +81,7 @@ const ReportType: React.FC = () => {
             <table className="min-w-full bg-white border border-gray-200">
                 <thead>
                     <tr>
-                        <th className="px-4 py-2 border-b">Report Types</th>
+                        <th className="text-start px-4 py-2 border-b">Report Types</th>
                     </tr>
                 </thead>
                 <tbody>

@@ -68,7 +68,7 @@ const data = {
 };
 
 export function BudgetVsActualReport() {
-  return <div>
-      <Bar options={options} data={data} />;
+  return <div className='bg-white shadow-md px-1 py-3 rounded-lg'>
+      <Bar options={options} data={data} />
     </div>
 }

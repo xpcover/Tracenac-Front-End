@@ -50,6 +50,7 @@ import CreateShiftUsagePage from './pages/create-reports/CreateShiftUsagePage';
 import Map from './pages/leaflet-map/Map';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import BarCodeGenerate from './pages/short-urls/generate-barcode/BarCodeGenerate';
+import BulkUrlListPage from './pages/short-urls/BulkUrlListPage';
 
 function App() {
   return (
@@ -107,8 +108,9 @@ function App() {
           <Route path="wip-assets" element={<WipAssetsPage />} />
           <Route path="short-urls" element={<ShortUrlsPage />} />
           <Route path="short-urls/create" element={<CreateShortUrlPage />} />
-          <Route path="short-urls/bulk" element={<BulkCreateUrlPage />} />
-          <Route path="short-urls/generate-barcode" element={<BarCodeGenerate />} />
+          <Route path="bulk-urls" element={<BulkUrlListPage />} />
+          <Route path="bulk-urls/create" element={<BulkCreateUrlPage />} />
+          <Route path="generate-barcode" element={<BarCodeGenerate />} />
 
           <Route path="map" element={<Map />} />
           

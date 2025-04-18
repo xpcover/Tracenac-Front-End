@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import { Link } from "react-router-dom";
+import axios from "axios";
 
 interface QrCodeModalProps {
   isOpen: boolean;
@@ -57,16 +59,18 @@ export function QrCodeModal({
     }
   };
 
-  const handleDownload = (format: "svg" | "png" | "pdf") => {
-    // In a real app, this would make an API call to generate and download the QR code
-    console.log("Download QR code:", {
-      format,
-      color,
-      bgColor,
-      layout,
-      size,
-      logo,
-    });
+  const handleDownload = async () => {
+    
+    const a = document.createElement("a");
+
+    const response = await axios.get(getQrCodeUrl(), { responseType: "blob" });
+    const imageDataUrl = URL.createObjectURL(response.data);
+
+    a.href = imageDataUrl;
+    a.download = 'qr_code.svg';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     
   };
 
@@ -97,15 +101,15 @@ export function QrCodeModal({
       actions={
         showCustomization ? (
           <>
-            <Button variant="secondary" onClick={() => handleDownload("svg")}>
+            <Button variant="secondary" onClick={handleDownload}>
               Download SVG
             </Button>
-            <Button variant="secondary" onClick={() => handleDownload("png")}>
+            {/* <Button variant="secondary" onClick={handleDownload}>
               Download PNG
-            </Button>
-            <Button variant="secondary" onClick={() => handleDownload("pdf")}>
+            </Button> */}
+            {/* <Button variant="secondary" onClick={() => handleDownload("pdf")}>
               Download PDF
-            </Button>
+            </Button> */}
           </>
         ) : undefined
       }

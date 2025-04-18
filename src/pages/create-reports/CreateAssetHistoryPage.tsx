@@ -238,12 +238,7 @@ export default function CreateAssetHistoryPage() {
               </select>
             </div>
             </div>
-
-
-           
-
-           
-
+            
             {reasonFields.map(field => (
               <div key={field.id} className="mt-4">
                 <label className="block text-sm font-medium text-gray-700">

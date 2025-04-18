@@ -63,7 +63,7 @@ export default function BulkCreateUrlPage() {
       ...formData,
       assetConfigs
     })
-    navigate('/short-urls')
+    navigate('/bulk-urls')
   }
 
   const totalUrls = assetConfigs.reduce((sum, config) => sum + config.urlCount, 0)
@@ -71,12 +71,12 @@ export default function BulkCreateUrlPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Bulk Create URLs"
+        title="Bulk Create URL"
         description="Create multiple shortened URLs at once"
       >
-        <Button variant="ghost" onClick={() => navigate('/short-urls')}>
+        <Button variant="ghost" onClick={() => navigate('/bulk-urls')}>
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Short URLs
+          Back to Bulk URLs
         </Button>
       </PageHeader>
 

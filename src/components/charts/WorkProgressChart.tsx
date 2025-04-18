@@ -48,7 +48,7 @@ const options = {
 };
 
 export default function WorkProgressChart() {
-  return <div>
-      <Line data={data} options={options} />;
+  return <div className='bg-white shadow-md px-1 py-3 rounded-lg'>
+      <Line data={data} options={options} />
     </div>
 }

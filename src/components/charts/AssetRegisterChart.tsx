@@ -41,7 +41,7 @@ const options = {
   };
 
 export function AssetRegisterChart() {
-  return <div>
+  return <div className='bg-white shadow-md px-1 py-3 rounded-lg'>
       <Doughnut options={options} data={data} />
     </div>
 }
