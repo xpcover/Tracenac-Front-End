@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState,useEffect } from 'react'
 import { format } from 'date-fns'
 import { createColumnHelper } from '@tanstack/react-table'
 import { DataTable } from '@/components/ui/Table'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Modal } from '@/components/ui/Modal'
 import DepreciationRecordForm from './DepreciationRecordForm'
+import axios from 'axios'
 
 interface DepreciationRecord {
   depreciation_id: string
@@ -105,16 +106,126 @@ const mockRecords: DepreciationRecord[] = [
 export default function DepreciationRecordsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingRecord, setEditingRecord] = useState<DepreciationRecord | null>(null)
+  const [depreciation,setDepreciation] = useState<DepreciationRecord[]>([])
 
-  const handleEdit = (record: DepreciationRecord) => {
-    setEditingRecord(record)
-    setIsModalOpen(true)
-  }
 
-  const handleDelete = (record: DepreciationRecord) => {
-    // In a real app, this would make an API call
-    console.log('Delete record:', record)
+  const fetchDepreciation=async()=>{
+    const token = localStorage.getItem("token")
+    if(!token){
+      console.error("No Token found");
+      return
+    }
+    // const locationData={
+    //   tenantId:localStorage.getItem("tenantId"),
+    // }
+
+    try{
+      const response = await axios.get("http://localhost:4000/api/department/depreciation",{
+        headers:{
+          "Authorization":`Bearer ${token}`
+        }
+      });
+      // if(!response.data.status === true){
+      //   throw new Error("Failed to Feth Budget");
+      // }
+
+      const data =  await response.data
+      console.log("Feth Depreciation", data);
+
+      // budget_id: string
+      // tenant_id: string
+      // asset_id: string
+      // fiscal_year: string
+      // budget_amount: number
+      // actual_amount: number
+      // variance: number
+      // created_at: string
+      // updated_at: string
+
+      // const mappedDepreciation = data.msg.map((depreciation:any)=>({
+      //   budget_id:depreciation._id,
+      //   tenant_id: depreciation.tenantId,
+      //   assest_id:depreciation.assest_id,
+      //   fiscal_year:depreciation.fiscal_year,
+      //   budget_amount: depreciation.budget_amount,
+      //   actual_amount: depreciation.actual_amount,
+      //   variance:depreciation.variance,
+      //   created_at: depreciation.createdAt,
+      //   created_by:depreciation.createdBy,
+      //   updated_at: depreciation.updatedAt
+      // }))
+
+      // setDepreciation(mappedDepreciation)
+    }catch(error){
+      console.error("Error fetching Budget",error)
+    }
   }
+  console.log("Budget",depreciation)
+
+  useEffect(()=>{
+    fetchDepreciation()
+  },[])
+
+  // const handleEdit = (rate: Budget) => {
+  //   setEditingBudget(rate)
+  //   setIsModalOpen(true)
+  // }
+
+  // const handleAddBudget = async(data:any)=>{
+  //   console.log(data)
+  //   const budgetData={
+  //     tenantId:localStorage.getItem("tenantId"),
+  //     assest_id: data.assest_id,
+  //     fiscal_year:data.fiscal_year,
+  //     budget_amount: data.budget_amount,
+  //     actual_amount: data.actual_amount,
+  //     variance:data.variance,
+  //     createdBy: localStorage.getItem("userId")
+  //   }
+  //   console.log("Budget", budgetData)
+  //   try{
+  //     const token = localStorage.getItem("token")
+  //     if(!token){
+  //       console.error("No token found");
+  //       return
+  //     }
+
+  //     const response = await axios.post("http://localhost:4000/api/department/budget",budgetData,{
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Authorization': `Bearer ${localStorage.getItem("token")}`,
+  //       },
+  //     })
+  //     if(response.data.status === true){
+  //       fetchBudget()
+  //     }
+  //     console.log("Added Budget", response.data)
+  //   }catch(error){
+  //     console.error("Error Adding Budget", error)
+  //   }
+  // }
+
+  // const handleDelete = async (budgetToDelete: any) => {
+  //   try {
+  //     console.log('Deleting Budget:', budgetToDelete);
+  
+  //     await axios.delete(`http://localhost:4000/api/department/budget/${budgetToDelete.budget_id}`, {
+  //       headers: {
+  //         Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //       },
+  //     });
+  
+  //     // Remove the deleted budget from the state
+  //     setBudget((prevBudgets) => prevBudgets.filter(
+  //       (budget) => budget.budget_id !== budgetToDelete.budget_id
+  //     ));
+  
+  //     console.log('Budget deleted successfully');
+  //   } catch (error) {
+  //     console.error("Error deleting budget:", error);
+  //   }
+  // };
+  
 
   return (
     <div>
@@ -130,8 +241,8 @@ export default function DepreciationRecordsPage() {
       <DataTable
         columns={columns}
         data={mockRecords}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
+        // onEdit={handleEdit}
+        // onDelete={handleDelete}
       />
 
       <Modal

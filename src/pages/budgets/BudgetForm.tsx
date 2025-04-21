@@ -5,17 +5,18 @@ import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 
 const budgetSchema = z.object({
-  asset_id: z.string().min(1, 'Asset ID is required'),
+  assest_id: z.string().min(1, 'Asset ID is required'),
   fiscal_year: z.string().min(1, 'Fiscal year is required'),
   budget_amount: z.number().min(0, 'Budget amount must be positive'),
   actual_amount: z.number().min(0, 'Actual amount must be positive'),
+  variance: z.number().min(0, 'Actual amount must be positive'),
 })
 
 type BudgetFormData = z.infer<typeof budgetSchema>
 
 interface BudgetFormProps {
   budget?: {
-    asset_id: string
+    assest_id: string
     fiscal_year: string
     budget_amount: number
     actual_amount: number
@@ -31,7 +32,7 @@ export default function BudgetForm({ budget, onSubmit }: BudgetFormProps) {
   } = useForm<BudgetFormData>({
     resolver: zodResolver(budgetSchema),
     defaultValues: {
-      asset_id: budget?.asset_id || '',
+      assest_id: budget?.assest_id || '',
       fiscal_year: budget?.fiscal_year || new Date().getFullYear().toString(),
       budget_amount: budget?.budget_amount || 0,
       actual_amount: budget?.actual_amount || 0,
@@ -45,7 +46,7 @@ export default function BudgetForm({ budget, onSubmit }: BudgetFormProps) {
           <label className="block text-sm font-medium text-gray-700">
             Asset ID
           </label>
-          <Input {...register('asset_id')} className="mt-1" />
+          <Input {...register('assest_id')} className="mt-1" />
           {errors.asset_id && (
             <p className="mt-1 text-sm text-red-600">{errors.asset_id.message}</p>
           )}
@@ -88,6 +89,22 @@ export default function BudgetForm({ budget, onSubmit }: BudgetFormProps) {
             type="number"
             step="0.01"
             {...register('actual_amount', { valueAsNumber: true })}
+            className="mt-1"
+          />
+          {errors.actual_amount && (
+            <p className="mt-1 text-sm text-red-600">
+              {errors.actual_amount.message}
+            </p>
+          )}
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Variance
+          </label>
+          <Input
+            type="number"
+            step="0.01"
+            {...register('variance', { valueAsNumber: true })}
             className="mt-1"
           />
           {errors.actual_amount && (

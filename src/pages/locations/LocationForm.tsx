@@ -32,8 +32,8 @@ export default function LocationForm({
     defaultValues: {
       location_name: location?.location_name || '',
       address: location?.address || '',
-      latitude: location?.latitude || 0,
-      longitude: location?.longitude || 0,
+      latitude: location?.lat || "",
+      longitude: location?.long || "",
     },
   })
 

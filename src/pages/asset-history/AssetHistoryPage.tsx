@@ -99,6 +99,8 @@ export default function AssetHistoryPage() {
     fetchAssetHistory()
   }, [])
 
+  console.log("Assests",assetHistoryData)
+
   const handleEdit = (history: AssetHistory) => {
     setEditingHistory(history)
     setIsModalOpen(true)

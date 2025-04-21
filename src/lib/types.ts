@@ -107,7 +107,7 @@ export interface AssetBlock {
 export interface Department {
   department_id: string
   tenant_id: string
-  department_name: string
+  departmentame: string
   created_at: string
   updated_at: string
 }
@@ -122,6 +122,8 @@ export interface Location {
   created_at: string
   updated_at: string
 }
+
+
 
 export interface CostCentre {
   cost_centre_id: string

@@ -138,11 +138,11 @@ export default function RolesPage() {
   const handleAddRole = async (data:any) => {
     try {
         // console.log('Adding role:', newRole);
-        const tenantId = localStorage.getItem('tenantId'); 
+        // const tenantId = await localStorage.getItem('tenantId'); 
         const newRole ={
             name: data.role_name,
             description:data.description,
-            tenanatId : tenantId
+            tenanatId : localStorage.getItem('tenantId')
         }
         const response = await axios.post('http://localhost:4000/api/tenant/roles', newRole);
         console.log('Added role:', response.data);
@@ -183,13 +183,16 @@ export default function RolesPage() {
           onClick: () => setIsModalOpen(true),
         }}
       />
-
-      <DataTable
-        columns={columns}
-        data={roles}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
+      {roles.length === 0?(
+          <p className="text-center text-gray-500 mt-4">No Roles history available</p>
+      ):(
+              <DataTable
+              columns={columns}
+              data={roles}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+      )}
 
       <Modal
         isOpen={isModalOpen}
@@ -207,6 +210,7 @@ export default function RolesPage() {
       editRole({ ...editingRole, ...data });
     }
     else {
+      console.log(data)
       handleAddRole(data);
     }
     console.log('Form submitted:', data);

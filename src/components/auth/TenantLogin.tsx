@@ -17,7 +17,7 @@ export default function TenantLoginForm() {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:4000/api/tenant/authenticate', {
+      const response = await fetch('https://api.tracenac.com/api/tenant/authenticate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

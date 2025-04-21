@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState,useEffect } from 'react'
 import { format } from 'date-fns'
 import { createColumnHelper } from '@tanstack/react-table'
 import { DataTable } from '@/components/ui/Table'
@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { Modal } from '@/components/ui/Modal'
 import { Department } from '@/lib/types'
 import DepartmentForm from './DepartmentForm'
+import axios from 'axios'
 
 const columnHelper = createColumnHelper<Department>()
 
@@ -49,15 +50,103 @@ const mockDepartments: Department[] = [
 export default function DepartmentsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingDepartment, setEditingDepartment] = useState<Department | null>(null)
+  const [department, setDepartment] = useState<Department[]>([])
 
-  const handleEdit = (department: Department) => {
+  const fetchDepartments=async()=>{
+    const token = localStorage.getItem("token")
+    if(!token){
+      console.error("No Token found");
+      return
+    }
+
+    try{
+      const response = await axios.get('http://localhost:4000/api/department/departments',{
+        headers:{
+          "Authorization":`Bearer ${token}`
+        }
+      });
+      if(!response.status === true){
+        throw new Error("Failed to Feth Departments");
+      }
+
+      const data =  await response.data
+      console.log("Feth Departments", data);
+
+      const mappedDepartment = data.map((depart:any)=>({
+        department_id:depart._id,
+        tenantId: depart.tenantId,
+        department_name:depart.departmentName,
+        created_at: depart.createdAt,
+        updated_at: depart.updatedAt
+      }))
+      setDepartment(mappedDepartment)
+    }catch(error){
+      console.error("Error fetching Department",error)
+    }
+  }
+
+  console.log("Department", department)
+
+  useEffect(()=>{
+    fetchDepartments()
+  },[])
+
+
+  // export interface Department {
+  //   department_id: string
+  //   tenant_id: string
+  //   department_name: string
+  //   created_at: string
+  //   updated_at: string
+  // }
+
+  const handleEdit = (department: data) => {
     setEditingDepartment(department)
     setIsModalOpen(true)
   }
 
-  const handleDelete = (department: Department) => {
+  const handleDelete = async (department: Department) => {
     // In a real app, this would make an API call
     console.log('Delete department:', department)
+    try{
+      await axios.delete(`http://localhost:4000/api/department/departments/${department.department_id}`,{
+        headers:{
+          "Authorization":`Bearer ${localStorage.getItem("token")}`,
+        },
+      })
+      setDepartment((prevDepar)=>prevDepar.filter((dep)=>dep.department_id !== department.department_id))
+    }catch(error){
+      console.error("Error deleting department", error)
+    }
+  }
+
+  const handleAddDepartment  = async(data:any)=>{
+    console.log(data)
+    const departmentData={
+      tenantId:localStorage.getItem("tenantId"),
+      departmentName:data.department_name
+    }
+    console.log("Department",departmentData)
+    try{
+      const token = localStorage.getItem("token")
+      if(!token){
+        console.error("No token found");
+        return
+      }
+
+      const response = await axios.post("http://localhost:4000/api/department/departments/",departmentData,{
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+      console.log("Added Department",response.data)
+      if(response.data.status === true){
+        fetchDepartments()
+      }
+    }catch(error){
+      console.error("Error Adding Department", error)
+    }
   }
 
   return (
@@ -73,7 +162,7 @@ export default function DepartmentsPage() {
 
       <DataTable
         columns={columns}
-        data={mockDepartments}
+        data={department}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
@@ -93,6 +182,11 @@ export default function DepartmentsPage() {
             console.log('Form submitted:', data)
             setIsModalOpen(false)
             setEditingDepartment(null)
+            if(editingDepartment){
+              handleEdit(data)
+            }else{
+              handleAddDepartment(data)
+            }
           }}
         />
       </Modal>

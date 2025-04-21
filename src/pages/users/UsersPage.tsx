@@ -202,12 +202,18 @@ export default function UsersPage() {
       />
 
       {/* Data Listing */}
-      <DataTable
+      {users.length === 0?(
+          <p className="text-center text-gray-500 mt-4">No Users available</p>
+      ):(
+        <DataTable
         columns={columns}
         data={users}
         onEdit={handleEditUser}
         onDelete={handleDelete}
+        showFilters
+        showDateFilter
       />
+      )}
 
       {/* Handling Toggle */}
       <Modal

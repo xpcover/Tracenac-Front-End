@@ -21,10 +21,10 @@ import AssetsPage from './pages/assets/AssetsPage';
 import AssetDetailsPage from './pages/assets/AssetDetailsPage';
 import AssetTimelinePage from './pages/assets/AssetTimelinePage';
 import AssetComponentsPage from './pages/asset-components/AssetComponentsPage';
-import DepreciationRecordsPage from './pages/depreciation-records/DepreciationRecordsPage';
+// import DepreciationRecordsPage from './pages/depreciation-records/DepreciationRecordsPage';
 import AssetHistoryPage from './pages/asset-history/AssetHistoryPage';
 import ContractsPage from './pages/contracts/ContractsPage';
-import BudgetsPage from './pages/budgets/BudgetsPage';
+// import BudgetsPage from './pages/budgets/BudgetsPage';
 import ForexRatesPage from './pages/forex-rates/ForexRatesPage';
 import NotificationsPage from './pages/notifications/NotificationsPage';
 import ShiftUsagePage from './pages/shift-usage/ShiftUsagePage';
@@ -53,9 +53,10 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/admin-login" element={<SuperAdminLogInForm />} />
-        <Route path="/tenant-login" element={<TenantLoginForm />} />
-        <Route path="/user-login" element={<UserLoginForm/>} /> 
+        <Route path="/admin-logIn" element={<SuperAdminLogInForm />} />
+        <Route path="/tenant-logIn" element={<TenantLoginForm />} />
+        <Route path="
+        " element={<UserLoginForm/>} /> 
         <Route
           path="/"
           element={
@@ -89,10 +90,10 @@ function App() {
           <Route path="assets/:id" element={<AssetDetailsPage />} />
           <Route path="assets/:id/timeline" element={<AssetTimelinePage />} />
           <Route path="asset-components" element={<AssetComponentsPage />} />
-          <Route path="depreciation-records" element={<DepreciationRecordsPage />} />
+          {/* <Route path="depreciation-records" element={<DepreciationRecordsPage />} /> */}
           <Route path="asset-history" element={<AssetHistoryPage />} />
           <Route path="contracts" element={<ContractsPage />} />
-          <Route path="budgets" element={<BudgetsPage />} />
+          {/* <Route path="budgets" element={<BudgetsPage />} /> */}
           <Route path="forex-rates" element={<ForexRatesPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="shift-usage" element={<ShiftUsagePage />} />

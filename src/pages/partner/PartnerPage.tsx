@@ -232,8 +232,6 @@ export default function PartnerPage(){
     }
   }
 
-
-
   console.log('partners', partners);
 
   return (
@@ -244,12 +242,16 @@ export default function PartnerPage(){
         onClick: () => setIsModalOpen(true),
        })}
       />
-      <DataTable 
-      columns={columns} 
-      data={partners} 
-      onEdit={handleEditUser}
-      onDelete={handleDelete}
-      />
+      {partners.length===0?(
+        <p className="text-center text-gray-500 mt-4">No Partner history available</p>
+      ):(
+              <DataTable 
+              columns={columns} 
+              data={partners} 
+              onEdit={handleEditUser}
+              onDelete={handleDelete}
+              />
+      )}
       <Modal 
         isOpen={isModalOpen} 
         onClose={() => {

@@ -154,7 +154,7 @@ export default function CreateAssetHistoryPage() {
       reasonFields:dynamicFields,
     }
 
-    axios.post('https://api.tracenac.com/api/assets/asset-history', assetHistory, {
+    axios.post('https://api.tracenac.com/api/assets/report-template', assetHistory, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
