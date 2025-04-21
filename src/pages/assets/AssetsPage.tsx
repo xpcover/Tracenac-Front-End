@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { Modal } from '@/components/ui/Modal'
 import { Asset } from '@/lib/types'
 import AssetForm from './AssetForm'
+import { useDataTable } from '@/hooks/useDataTable'
 
 const columnHelper = createColumnHelper<Asset>()
 
@@ -18,7 +19,7 @@ const columns = [
         {info.getValue() ? (
           <img
             src={info.getValue()}
-            alt={info.row.original.asset_name}
+            alt={info.row.original.assetName}
             className="w-full h-full object-cover rounded-lg"
           />
         ) : (
@@ -33,14 +34,14 @@ const columns = [
     header: 'Asset Code',
     cell: (info) => (
       <button
-        onClick={() => info.table.options.meta?.onAssetClick?.(info.row.original)}
+        // onClick={() => info.table.options.meta?.onAssetClick?.(info.row.original)}
         className="text-blue-600 hover:underline font-medium"
       >
-        {info.getValue()}
+        {/* {info.getValue()} */}
       </button>
     ),
   }),
-  columnHelper.accessor('asset_name', {
+  columnHelper.accessor('assetName', {
     header: 'Name',
     cell: (info) => info.getValue(),
   }),
@@ -67,17 +68,17 @@ const columns = [
   }),
   columnHelper.accessor('purchase_date', {
     header: 'Purchase Date',
-    cell: (info) => format(new Date(info.getValue()), 'PP'),
+    cell: (info) => format(new Date(), 'PP'),
   }),
   columnHelper.accessor('purchase_cost', {
     header: 'Purchase Cost',
     cell: (info) => (
       <span className="font-mono">
-        {info.row.original.purchase_currency}{' '}
+        {/* {info.row.original.purchase_currency}{' '}
         {info.getValue().toLocaleString(undefined, {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
-        })}
+        })} */}
       </span>
     ),
   }),
@@ -85,57 +86,14 @@ const columns = [
     header: 'Current Value',
     cell: (info) => (
       <span className="font-mono">
-        {info.row.original.purchase_currency}{' '}
+        {/* {info.row.original.purchase_currency}{' '}
         {info.getValue().toLocaleString(undefined, {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
-        })}
+        })} */}
       </span>
     ),
   }),
-]
-
-// Mock data - In a real app, this would come from an API
-const mockAssets: Asset[] = [
-  {
-    asset_id: 'LAP001', // Changed to match the expected format
-    tenant_id: '1',
-    asset_code: 'LAP001',
-    asset_name: 'MacBook Pro 16"',
-    asset_type: 'Laptop',
-    image_url: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca4?w=250&h=250&fit=crop',
-    category_id: '1',
-    block_id: '1',
-    department_id: '1',
-    location_id: '1',
-    latitude: 40.7128,
-    longitude: -74.006,
-    address: '123 Business St, NY',
-    cost_centre_id: '1',
-    purchase_date: '2024-01-15',
-    purchase_cost: 2499.99,
-    purchase_currency: 'USD',
-    exchange_rate: 1,
-    current_value: 2249.99,
-    depreciation_method: 'straight-line',
-    depreciation_rate: 20,
-    useful_life: 5,
-    salvage_value: 500,
-    lease_end_date: null,
-    warranty_end_date: '2025-01-15',
-    insurance_end_date: '2025-01-15',
-    amc_end_date: null,
-    market_valuation: 2000,
-    status: 'active',
-    barcode: '123456789',
-    impairment_value: 0,
-    notes: 'Developer laptop',
-    created_by: '1',
-    updated_by: '1',
-    created_at: '2024-01-15T10:00:00Z',
-    updated_at: '2024-01-15T10:00:00Z',
-  },
-  // Add more mock assets here
 ]
 
 const ASSET_STATUS_OPTIONS = [
@@ -149,6 +107,8 @@ export default function AssetsPage() {
   const navigate = useNavigate()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null)
+
+  const { createData, updateData, deleteData } = useDataTable();
 
   const handleEdit = (asset: Asset) => {
     setEditingAsset(asset)
@@ -190,8 +150,8 @@ export default function AssetsPage() {
       />
 
       <DataTable
+        url="/assets"
         columns={columns}
-        data={mockAssets}
         onEdit={handleEdit}
         onDelete={handleDelete}
         showDateFilter
@@ -201,24 +161,29 @@ export default function AssetsPage() {
         }}
       />
 
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false)
-          setEditingAsset(null)
-        }}
-        title={editingAsset ? 'Edit Asset' : 'Add Asset'}
-      >
-        <AssetForm
-          asset={editingAsset}
-          onSubmit={(data) => {
-            // In a real app, this would make an API call
-            console.log('Form submitted:', data)
+        <Modal
+          isOpen={isModalOpen}
+          onClose={() => {
             setIsModalOpen(false)
             setEditingAsset(null)
           }}
-        />
-      </Modal>
+          title={editingAsset ? 'Edit Asset' : 'Add Asset'}
+        >
+          <AssetForm
+            asset={editingAsset}
+            onSubmit={async(data) => {
+              const result = await createData.mutateAsync({
+                url: '/assets',
+                data
+              });
+              
+              console.log('Created:', result);
+              
+              setIsModalOpen(false)
+              setEditingAsset(null)
+            }}
+          />
+        </Modal>
     </div>
   )
 }

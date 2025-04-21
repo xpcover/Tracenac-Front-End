@@ -78,6 +78,7 @@ export default function AssetCategoriesPage() {
       />
 
       <DataTable
+        url='/assets/categories'
         columns={columns}
         data={mockCategories}
         onEdit={handleEdit}

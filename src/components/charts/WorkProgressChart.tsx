@@ -32,7 +32,7 @@ const options = {
     },
     title: {
       display: true,
-      text: 'Work Progress',
+      text: 'Completion Tren',
     }
   },
   scales: {

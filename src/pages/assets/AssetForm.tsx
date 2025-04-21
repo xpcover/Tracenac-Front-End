@@ -9,33 +9,32 @@ const DEPRECIATION_METHODS = ['SLM', 'WDV']
 const ASSET_STATUSES = ['Active', 'Sold', 'Discarded', 'Relocated']
 
 type AssetFormData = {
-  clientId: string
-  assetId: number
-  assetName: string
-  assetCode: string
-  assetType: string
-  categoryId: string
-  departmentId: string
-  locationId: string
-  costCentreId: string
-  purchaseDate: string
-  latitude: number
-  longitude: number
-  purchaseCost: number
-  depreciationMethod: string
-  depreciationRate: number
-  usefulLife: number
-  salvageValue: number
-  currentValue: number
-  marketValuation: number
+  asset_id?: number
+  asset_code: string
+  asset_name: string
+  asset_type: string
+  category_id: string
+  block_id: string
+  department_id: string
+  location_id: string
+  cost_centre_id: string
+  purchase_date: string
+  purchase_cost: number
+  purchase_currency: string
+  exchange_rate: number
+  current_value: number
+  depreciation_method: string
+  depreciation_rate: number
+  useful_life: number
+  salvage_value: number
+  lease_end_date: string | null
+  warranty_end_date: string
+  insurance_end_date: string
+  amc_end_date: string
+  market_valuation: number
   status: string
-  warrantyEndDate: string
-  insuranceEndDate: string
-  amcEndDate: string
-  leaseEndDate: string
-  shiftUsageDetails: string
-  barcodeLink: string
-  impairmentValue: number
+  barcode: string
+  impairment_value: number
   notes: string
 }
 
@@ -49,34 +48,46 @@ export default function AssetForm({ asset, onSubmit }: AssetFormProps) {
   const [departments, setDepartments] = useState([])
   const [locations, setLocations] = useState([])
   const [costCentres, setCostCentres] = useState([])
+  const [blocks, setBlocks] = useState([])
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<AssetFormData>({
-    defaultValues: asset || {},
+    defaultValues: asset || {
+      purchase_currency: 'INR',
+      exchange_rate: 1.0,
+      lease_end_date: null
+    },
   })
 
   useEffect(() => {
     async function fetchDropdownData() {
       try {
-        const [categoriesRes, departmentsRes, locationsRes, costCentresRes] = await Promise.all([
-          axios.get('/api/categories'),
-          axios.get('/api/departments'),
-          axios.get('/api/locations'),
-          axios.get('/api/cost-centres'),
+        const [
+          categoriesRes, 
+          departmentsRes, 
+          locationsRes, 
+          costCentresRes,
+          blocksRes
+        ] = await Promise.all([
+          axios.get('/categories'),
+          axios.get('/departments'),
+          axios.get('/locations'),
+          axios.get('/cost-centres'),
+          axios.get('/blocks')
         ])
-        setCategories(Array.isArray(categoriesRes.data) ? categoriesRes.data : [])
-        setDepartments(Array.isArray(departmentsRes.data) ? departmentsRes.data : [])
-        setLocations(Array.isArray(locationsRes.data) ? locationsRes.data : [])
-        setCostCentres(Array.isArray(costCentresRes.data) ? costCentresRes.data : [])
+
+        console.log("===>form",categoriesRes,departmentsRes,locationsRes,costCentresRes,blocksRes);
+        
+        // setCategories(categoriesRes?.data || [])
+        // setDepartments(departmentsRes?.data || [])
+        // setLocations(locationsRes?.data || [])
+        // setCostCentres(costCentresRes?.data || [])
+        // setBlocks(blocksRes?.data || [])
       } catch (error) {
         console.error('Error fetching dropdown data:', error)
-        setCategories([])
-        setDepartments([])
-        setLocations([])
-        setCostCentres([])
       }
     }
     fetchDropdownData()
@@ -90,24 +101,23 @@ export default function AssetForm({ asset, onSubmit }: AssetFormProps) {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Asset ID</label>
-            <Input type="number" {...register('assetId', { required: true })} className="mt-1" />
-            {errors.assetId && <p className="mt-1 text-sm text-red-600">Asset ID is required</p>}
+            <Input type="number" {...register('asset_id')} className="mt-1" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Asset Name</label>
-            <Input {...register('assetName', { required: true })} className="mt-1" />
-            {errors.assetName && <p className="mt-1 text-sm text-red-600">Asset Name is required</p>}
+            <Input {...register('asset_name', { required: true })} className="mt-1" />
+            {errors.asset_name && <p className="mt-1 text-sm text-red-600">Asset Name is required</p>}
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Asset Code</label>
-            <Input {...register('assetCode')} className="mt-1" />
+            <Input {...register('asset_code')} className="mt-1" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Asset Type</label>
-            <select {...register('assetType')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+            <select {...register('asset_type')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
               <option value="">Select Asset Type</option>
               {ASSET_TYPES.map((type) => (
                 <option key={type} value={type}>
@@ -125,7 +135,7 @@ export default function AssetForm({ asset, onSubmit }: AssetFormProps) {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Category</label>
-            <select {...register('categoryId')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+            <select {...register('category_id')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
               <option value="">Select Category</option>
               {categories.map((category: any) => (
                 <option key={category.id} value={category.id}>
@@ -135,12 +145,12 @@ export default function AssetForm({ asset, onSubmit }: AssetFormProps) {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Department</label>
-            <select {...register('departmentId')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-              <option value="">Select Department</option>
-              {departments.map((department: any) => (
-                <option key={department.id} value={department.id}>
-                  {department.name}
+            <label className="block text-sm font-medium text-gray-700">Block</label>
+            <select {...register('block_id')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+              <option value="">Select Block</option>
+              {blocks.map((block: any) => (
+                <option key={block.id} value={block.id}>
+                  {block.name}
                 </option>
               ))}
             </select>
@@ -149,8 +159,19 @@ export default function AssetForm({ asset, onSubmit }: AssetFormProps) {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
+            <label className="block text-sm font-medium text-gray-700">Department</label>
+            <select {...register('department_id')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+              <option value="">Select Department</option>
+              {departments.map((department: any) => (
+                <option key={department.id} value={department.id}>
+                  {department.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
             <label className="block text-sm font-medium text-gray-700">Location</label>
-            <select {...register('locationId')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+            <select {...register('location_id')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
               <option value="">Select Location</option>
               {locations.map((location: any) => (
                 <option key={location.id} value={location.id}>
@@ -159,9 +180,12 @@ export default function AssetForm({ asset, onSubmit }: AssetFormProps) {
               ))}
             </select>
           </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Cost Centre</label>
-            <select {...register('costCentreId')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+            <select {...register('cost_centre_id')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
               <option value="">Select Cost Centre</option>
               {costCentres.map((costCentre: any) => (
                 <option key={costCentre.id} value={costCentre.id}>
@@ -169,6 +193,10 @@ export default function AssetForm({ asset, onSubmit }: AssetFormProps) {
                 </option>
               ))}
             </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Purchase Currency</label>
+            <Input {...register('purchase_currency')} className="mt-1" />
           </div>
         </div>
       </div>
@@ -178,12 +206,23 @@ export default function AssetForm({ asset, onSubmit }: AssetFormProps) {
         <h3 className="text-lg font-medium">Financial Information</h3>
         <div className="grid grid-cols-2 gap-4">
           <div>
+            <label className="block text-sm font-medium text-gray-700">Purchase Date</label>
+            <Input type="date" {...register('purchase_date')} className="mt-1" />
+          </div>
+          <div>
             <label className="block text-sm font-medium text-gray-700">Purchase Cost</label>
-            <Input type="number" {...register('purchaseCost')} className="mt-1" />
+            <Input type="number" step="0.01" {...register('purchase_cost')} className="mt-1" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Exchange Rate</label>
+            <Input type="number" step="0.0001" {...register('exchange_rate')} className="mt-1" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Depreciation Method</label>
-            <select {...register('depreciationMethod')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+            <select {...register('depreciation_method')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
               <option value="">Select Method</option>
               {DEPRECIATION_METHODS.map((method) => (
                 <option key={method} value={method}>
@@ -197,33 +236,48 @@ export default function AssetForm({ asset, onSubmit }: AssetFormProps) {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Useful Life (years)</label>
-            <Input type="number" {...register('usefulLife')} className="mt-1" />
+            <Input type="number" {...register('useful_life')} className="mt-1" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Salvage Value</label>
-            <Input type="number" {...register('salvageValue')} className="mt-1" />
+            <label className="block text-sm font-medium text-gray-700">Depreciation Rate</label>
+            <Input type="number" step="0.01" {...register('depreciation_rate')} className="mt-1" />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Lease End Date</label>
-            <Input type="date" {...register('leaseEndDate')} className="mt-1" />
+            <label className="block text-sm font-medium text-gray-700">Salvage Value</label>
+            <Input type="number" step="0.01" {...register('salvage_value')} className="mt-1" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Market Valuation</label>
-            <Input type="number" {...register('marketValuation')} className="mt-1" />
+            <label className="block text-sm font-medium text-gray-700">Current Value</label>
+            <Input type="number" step="0.01" {...register('current_value')} className="mt-1" />
+          </div>
+        </div>
+      </div>
+
+      {/* Dates Information */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium">Dates Information</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Lease End Date</label>
+            <Input type="date" {...register('lease_end_date')} className="mt-1" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Warranty End Date</label>
+            <Input type="date" {...register('warranty_end_date')} className="mt-1" />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Insurance End Date</label>
-            <Input type="date" {...register('insuranceEndDate')} className="mt-1" />
+            <Input type="date" {...register('insurance_end_date')} className="mt-1" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">AMC End Date</label>
-            <Input type="date" {...register('amcEndDate')} className="mt-1" />
+            <Input type="date" {...register('amc_end_date')} className="mt-1" />
           </div>
         </div>
       </div>
@@ -244,20 +298,25 @@ export default function AssetForm({ asset, onSubmit }: AssetFormProps) {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Warranty End Date</label>
-            <Input type="date" {...register('warrantyEndDate')} className="mt-1" />
+            <label className="block text-sm font-medium text-gray-700">Market Valuation</label>
+            <Input type="number" step="0.01" {...register('market_valuation')} className="mt-1" />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Notes</label>
-            <Input type="text" {...register('notes')} className="mt-1" />
+            <label className="block text-sm font-medium text-gray-700">Barcode</label>
+            <Input {...register('barcode')} className="mt-1" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Barcode Link</label>
-            <Input type="text" {...register('barcodeLink')} className="mt-1" />
+            <label className="block text-sm font-medium text-gray-700">Impairment Value</label>
+            <Input type="number" step="0.01" {...register('impairment_value')} className="mt-1" />
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Notes</label>
+          <Input {...register('notes')} className="mt-1" />
         </div>
       </div>
 

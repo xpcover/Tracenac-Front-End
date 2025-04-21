@@ -51,9 +51,12 @@ import Map from './pages/leaflet-map/Map';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import BarCodeGenerate from './pages/short-urls/generate-barcode/BarCodeGenerate';
 import BulkUrlListPage from './pages/short-urls/BulkUrlListPage';
+import { Provider } from 'react-redux'
+import { store } from './redux/store';
 
 function App() {
   return (
+    <Provider store={store}>
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginForm />} />
@@ -124,6 +127,7 @@ function App() {
         </Route>
       </Routes>
     </BrowserRouter>
+    </Provider>
   );
 }
 

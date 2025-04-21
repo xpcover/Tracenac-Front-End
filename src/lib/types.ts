@@ -118,7 +118,7 @@ export interface CostCentre {
 // Zod schemas for form validation
 export const assetSchema = z.object({
   asset_code: z.string().min(1, 'Asset code is required'),
-  asset_name: z.string().min(1, 'Asset name is required'),
+  assetName: z.string().min(1, 'Asset name is required'),
   asset_type: z.string().min(1, 'Asset type is required'),
   image_url: z.string().optional(),
   category_id: z.string().min(1, 'Category is required'),

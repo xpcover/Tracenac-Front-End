@@ -7,14 +7,19 @@ import {
   useReactTable,
   getPaginationRowModel,
 } from '@tanstack/react-table'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { TableFilters } from './TableFilters'
 import { TablePagination } from './TablePagination'
+import { useDispatch, useSelector } from 'react-redux'
+import { RootState } from '@/redux/store'
+import { useQuery } from '@tanstack/react-query'
+import { dataTableService } from '@/services/dataTable.service'
+import { setTableData, tableState } from '@/redux/slices/dataTableSlice'
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
-  data: TData[]
+  url:string,
   onEdit?: (row: TData) => void
   onDelete?: (row: TData) => void
   meta?: Record<string, any>
@@ -26,7 +31,7 @@ interface DataTableProps<TData, TValue> {
 
 export function DataTable<TData, TValue>({
   columns,
-  data,
+  url,
   onEdit,
   onDelete,
   meta,
@@ -36,31 +41,27 @@ export function DataTable<TData, TValue>({
   additionalFilters,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
-  const [filteredData, setFilteredData] = useState(data)
   const [{ pageIndex, pageSize }, setPagination] = useState({
     pageIndex: 0,
     pageSize: 10,
   })
-
-  const table = useReactTable({
-    data: filteredData,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
-    state: {
-      sorting,
-      pagination: {
-        pageIndex,
-        pageSize,
-      },
-    },
-    meta,
-  })
+  
+  const { data:tableData } = useSelector((state: RootState) => state.dataTable)
+  const dispatch = useDispatch();
+  
+  const { data:apiData,isLoading } = useQuery({
+    queryKey: [url],
+    queryFn: () => dataTableService.fetchAllData(url),
+  });
+  
+  useEffect(() => {
+    dispatch(setTableData(apiData));
+  },[apiData])
+  
+  const [filteredData, setFilteredData] = useState(tableData)
 
   const handleSearch = (searchValue: string) => {
-    const filtered = data.filter((item) =>
+    const filtered = tableData.filter((item) =>
       Object.values(item as any).some(
         (value) =>
           value &&
@@ -73,11 +74,11 @@ export function DataTable<TData, TValue>({
 
   const handleDateChange = ({ from, to }: { from: string; to: string }) => {
     if (!from && !to) {
-      setFilteredData(data)
+      setFilteredData(tableData)
       return
     }
 
-    const filtered = data.filter((item: any) => {
+    const filtered = tableData.filter((item: any) => {
       const itemDate = new Date(item.created_at || item.date)
       const fromDate = from ? new Date(from) : null
       const toDate = to ? new Date(to) : null
@@ -95,6 +96,29 @@ export function DataTable<TData, TValue>({
     setFilteredData(filtered)
     setPagination((prev) => ({ ...prev, pageIndex: 0 }))
   }
+
+  console.log(apiData)
+
+  const table = useReactTable({
+    data: tableData || [],
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    onSortingChange: setSorting,
+    state: {
+      sorting,
+      pagination: {
+        pageIndex,
+        pageSize,
+      },
+    },
+    meta,
+  })
+
+
+  if(isLoading)
+    return <h4>Loading...</h4>
 
   return (
     <div className="space-y-4">
