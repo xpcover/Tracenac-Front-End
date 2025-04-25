@@ -2,23 +2,16 @@ import { dataTableService } from "@/services/dataTable.service";
 import { useMutation, UseMutationResult } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 
-export const useDataTable = () => {
-  const createData: UseMutationResult<
-    any,
-    AxiosError,
-    { url: string; data: Record<string, string> },
-    unknown
-  > = useMutation({
-    mutationFn: ({ url, data }) => dataTableService.createData(url, data),
+export const useDataTable = (url:string) => {
+  
+  const createData = ({ onSuccess, onError }) => useMutation({
+    mutationFn: data => dataTableService.createData(url, data),
+    onSuccess: data => onSuccess(data),
+    onError: error => onError(error),
   });
 
-  const updateData: UseMutationResult<
-    any,
-    AxiosError,
-    { url: string; data: Record<string, string> },
-    unknown
-  > = useMutation({
-    mutationFn: ({ url, data }) => dataTableService.updateData(url, data),
+  const updateData = useMutation({
+    mutationFn: (data) => dataTableService.updateData(url, data),
   });
 
   const deleteData: UseMutationResult<any, AxiosError, string, unknown> =

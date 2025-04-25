@@ -1,5 +1,6 @@
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Pie } from 'react-chartjs-2';
+import ChartFilter from './ChartFilter';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -20,6 +21,9 @@ const data = {
 const options = {
   responsive: true,
   plugins: {
+    legend: {
+      position: 'bottom',
+    },
     title: {
       display: true,
       text: 'Active vs Inactive Assets',
@@ -29,6 +33,7 @@ const options = {
 
 export default  function ActiveVsInActiveAssets() {
   return <div className='bg-white shadow-md px-1 py-3 rounded-lg'>
-      <Pie options={options} data={data} />
+        <ChartFilter />
+        <Pie options={options} data={data} />
     </div>
 }

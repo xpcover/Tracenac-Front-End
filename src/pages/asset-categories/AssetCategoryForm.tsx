@@ -4,6 +4,9 @@ import { z } from 'zod'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { AssetCategory } from '@/lib/types'
+import toast from 'react-hot-toast'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { dataTableService } from '@/services/dataTable.service'
 
 const categorySchema = z.object({
   category_name: z.string().min(1, 'Category name is required'),
@@ -13,13 +16,13 @@ const categorySchema = z.object({
 type CategoryFormData = z.infer<typeof categorySchema>
 
 interface AssetCategoryFormProps {
-  category?: AssetCategory | null
-  onSubmit: (data: CategoryFormData) => void
+  category?: AssetCategory | null,
+  setIsModalOpen: (arg:boolean) => void
 }
 
 export default function AssetCategoryForm({
   category,
-  onSubmit,
+  setIsModalOpen
 }: AssetCategoryFormProps) {
   const {
     register,
@@ -32,6 +35,39 @@ export default function AssetCategoryForm({
       description: category?.description || '',
     },
   })
+
+  const queryClient = useQueryClient();
+
+  const createData = useMutation({
+    mutationFn: data => dataTableService.createData('/category', data),
+    onSuccess: () => {
+      toast.success("Category added successfully");
+      setIsModalOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['/category'] });
+    },
+    onError: () => {
+      toast.error("Failed to add category");
+    }
+  })
+
+  const updateData = useMutation({
+    mutationFn: (data) => dataTableService.updateData(`/category/${category?._id}`, data),
+    onSuccess: () => {
+      setIsModalOpen(false);
+      toast.success("Category updated successfully");
+    },
+    onError: () => {
+      toast.error("Failed to update category");
+    }
+  })
+
+  const onSubmit = (data: CategoryFormData) => {
+    if (category) {
+      updateData.mutate(data)
+    }else{
+      createData.mutate(data)
+    }
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

@@ -15,9 +15,15 @@ function DashboardPage() {
     <>
       <h1 className="text-2xl font-bold mb-10">Dashboard</h1>
       <ROIChart />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+      <div>
+        <h3 className="text-xl text-center font-semibold mb-5">Report Completion Metrics</h3>
+        <CompletionMetricsReport />
+      </div>
+        <DeprecationScheduleChart />
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
         <AssetRegisterChart />
-        <DeprecationScheduleChart />
         <UsageReport />
         <MaintenanceChart />
         <InsuranceSummary />
@@ -27,12 +33,6 @@ function DashboardPage() {
         <ContractReport />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-      <div>
-        <h3 className="text-xl text-center font-semibold mb-5">Report Completion Metrics</h3>
-        <CompletionMetricsReport />
-      </div>
-      </div>
     </>
   );
 }

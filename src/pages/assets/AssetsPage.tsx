@@ -55,14 +55,14 @@ const columns = [
       <span
         className={`px-2 py-1 text-xs rounded-full ${
           {
-            active: 'bg-green-100 text-green-800',
-            inactive: 'bg-gray-100 text-gray-800',
-            maintenance: 'bg-yellow-100 text-yellow-800',
-            disposed: 'bg-red-100 text-red-800',
+            Active: 'bg-green-100 text-green-800',
+            InActive: 'bg-gray-100 text-gray-800',
+            Maintenance: 'bg-yellow-100 text-yellow-800',
+            Disposed: 'bg-red-100 text-red-800',
           }[info.getValue()]
         }`}
       >
-        {info.getValue().charAt(0).toUpperCase() + info.getValue().slice(1)}
+        {info.getValue()}
       </span>
     ),
   }),

@@ -67,37 +67,6 @@ export default function AssetHistoryPage() {
   const navigate = useNavigate()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingHistory, setEditingHistory] = useState<AssetHistory | null>(null)
-  const [assetHistoryData, setAssetHistoryData] = useState<AssetHistory[]>([])
-
-  useEffect(() => {
-    const fetchAssetHistory = async () => {
-      const token = localStorage.getItem('token')
-      if (!token) {
-        console.error('No token found')
-        return
-      }
-
-      try {
-        const response = await axios.get('https://api.tracenac.com/api/assets/asset-history', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        })
-
-        console.log('Fetched asset history data:', response.data) // Debugging log
-
-        if (Array.isArray(response.data)) {
-          setAssetHistoryData(response.data)
-        } else {
-          console.error('Unexpected data format:', response.data)
-        }
-      } catch (error) {
-        console.error('Error fetching asset history:', error)
-      }
-    }
-
-    fetchAssetHistory()
-  }, [])
 
   const handleEdit = (history: AssetHistory) => {
     setEditingHistory(history)
@@ -115,20 +84,15 @@ export default function AssetHistoryPage() {
   return (
     <div>
       <PageHeader title="Asset History" description="Track changes and updates to assets" />
-
-      {assetHistoryData.length === 0 ? (
-        <p className="text-center text-gray-500 mt-4">No asset history available</p>
-      ) : (
         <DataTable
+          url='/assets/asset-history'
           columns={columns}
-          data={assetHistoryData}
           onEdit={handleEdit}
           onDelete={handleDelete}
           showFilters
           showDateFilter
           meta={{ onAssetClick: handleAssetClick }}
         />
-      )}
 
       <Modal
         isOpen={isModalOpen}

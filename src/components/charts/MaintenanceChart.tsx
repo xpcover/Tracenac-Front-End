@@ -8,6 +8,7 @@ import {
   Legend,
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
+import ChartFilter from './ChartFilter';
 
 ChartJS.register(
   CategoryScale,
@@ -22,7 +23,7 @@ const options = {
   responsive: true,
   plugins: {
     legend: {
-      position: 'top' as const,
+      position: 'bottom',
     },
     title: {
       display: true,
@@ -50,7 +51,9 @@ const data = {
 };
 
 export function MaintenanceChart() {
-  return <div className='bg-white shadow-md px-1 py-3 rounded-lg'>
-    <Bar options={options} data={data} />
+  return <div className='bg-white shadow-md px-1 py-3 h-fit rounded-lg'>
+        <ChartFilter />
+        
+        <Bar options={options} data={data} />
     </div>
 }

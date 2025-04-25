@@ -89,22 +89,6 @@ const columns = [
   }),
 ]
 
-// Mock data
-const mockUrls: ShortUrl[] = [
-  {
-    id: '1',
-    longUrl: 'https://example.com/very/long/url/that/needs/to/be/shortened/123',
-    shortUrl: 'https://short.url/abc123',
-    businessUnit: 'IT',
-    location: 'HQ',
-    assetId: 'LAP001',
-    assetName: 'MacBook Pro 16"',
-    qrCode: true,
-    createdAt: '2024-03-15T10:00:00Z',
-    clicks: 45,
-  },
-]
-
 export default function ShortUrlsPage() {
   const [selectedUrl, setSelectedUrl] = useState<string | null>(null)
 
@@ -127,7 +111,7 @@ export default function ShortUrlsPage() {
 
       <DataTable
         columns={columns}
-        data={mockUrls}
+        url="/generator/single"
         meta={{
           onViewQrCode: (url: string) => setSelectedUrl(url),
         }}

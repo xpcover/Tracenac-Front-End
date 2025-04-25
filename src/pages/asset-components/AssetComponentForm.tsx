@@ -4,15 +4,19 @@ import { z } from 'zod'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { AssetComponent, assetComponentSchema } from '@/lib/types'
+import { useDataTable } from '@/hooks/useDataTable'
+import toast from 'react-hot-toast'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { dataTableService } from '@/services/dataTable.service'
 
-type ComponentFormData = z.infer<typeof assetComponentSchema>
+  type ComponentFormData = z.infer<typeof assetComponentSchema>
 
-interface AssetComponentFormProps {
-  component?: AssetComponent | null
-  onSubmit: (data: ComponentFormData) => void
-}
+  interface AssetComponentFormProps {
+    component?: AssetComponent | null,
+    setIsModalOpen: (arg:boolean) => void
+  }
 
-const DEPRECIATION_METHODS = [
+  const DEPRECIATION_METHODS = [
   'straight-line',
   'declining-balance',
   'sum-of-years',
@@ -23,8 +27,9 @@ const COMPONENT_STATUSES = ['active', 'inactive', 'maintenance', 'disposed']
 
 export default function AssetComponentForm({
   component,
-  onSubmit,
+  setIsModalOpen
 }: AssetComponentFormProps) {
+
   const {
     register,
     handleSubmit,
@@ -32,7 +37,8 @@ export default function AssetComponentForm({
   } = useForm<ComponentFormData>({
     resolver: zodResolver(assetComponentSchema),
     defaultValues: {
-      asset_id: component?.asset_id || '',
+      assetId: component?.assetId || '',
+      // tenant_id: localStorage.getItem('tenantId')?.toString() || '',
       parent_component_id: component?.parent_component_id || null,
       component_name: component?.component_name || '',
       component_type: component?.component_type || '',
@@ -46,6 +52,42 @@ export default function AssetComponentForm({
     },
   })
 
+  const queryClient = useQueryClient();
+  
+  const createDataMutation = useMutation({
+      mutationFn: data => dataTableService.createData('/assets/components', data),
+      onSuccess: () => {
+        toast.success('Asset Component added successfully');
+        queryClient.invalidateQueries({ queryKey: ['/assets/components'] });
+        setIsModalOpen(false)
+      },
+      onError: () => {
+        toast.error('Failed to add asset block');
+      },
+    })
+  
+    const updateDataMutation = useMutation({
+      mutationFn: data =>  dataTableService.updateData(`/assets/components/${component?.id}`, data),
+      onSuccess: () => {
+        toast.success('Asset Block updated successfully');
+        queryClient.invalidateQueries({ queryKey: ['/assets/components'] });
+        setIsModalOpen(false)
+      },
+  
+      onError: () => {
+        toast.error('Failed to update asset components');
+      },
+    })
+
+  const onSubmit = (data: ComponentFormData) => {
+      if(component){
+        updateDataMutation.mutate(data);
+      }else{
+        createDataMutation.mutate(data);
+      }
+    }
+
+  
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* Basic Information */}
@@ -56,9 +98,20 @@ export default function AssetComponentForm({
             <label className="block text-sm font-medium text-gray-700">
               Asset ID
             </label>
-            <Input {...register('asset_id')} className="mt-1" />
-            {errors.asset_id && (
-              <p className="mt-1 text-sm text-red-600">{errors.asset_id.message}</p>
+            <Input {...register('assetId')} className="mt-1" />
+            {errors.assetId && (
+              <p className="mt-1 text-sm text-red-600">{errors.assetId.message}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Component ID
+            </label>
+            <Input {...register('component_id')} className="mt-1" />
+            {errors.component_id && (
+              <p className="mt-1 text-sm text-red-600">
+                {errors.component_id.message}
+              </p>
             )}
           </div>
           <div>
@@ -230,7 +283,9 @@ export default function AssetComponentForm({
           </div>
         </div>
       </div>
-
+            {
+              console.log("===>",errors)
+            }
       <div className="flex justify-end gap-2">
         <Button type="submit">Save Component</Button>
       </div>

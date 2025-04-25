@@ -8,6 +8,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import ChartFilter from './ChartFilter';
 
 ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Tooltip, Legend);
 
@@ -28,7 +29,7 @@ const options = {
   responsive: true,
   plugins: {
     legend: {
-      position: 'top',
+      position: 'bottom',
     },
     title: {
       display: true,
@@ -49,6 +50,8 @@ const options = {
 
 export default function WorkProgressChart() {
   return <div className='bg-white shadow-md px-1 py-3 rounded-lg'>
+      
+      <ChartFilter />
       <Line data={data} options={options} />
     </div>
 }

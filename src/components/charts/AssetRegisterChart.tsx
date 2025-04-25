@@ -1,5 +1,6 @@
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
+import ChartFilter from './ChartFilter';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -33,6 +34,9 @@ const data = {
 const options = {
     responsive: true,
     plugins: {
+      legend: {
+        position: 'bottom',
+      },
       title: {
         display: true,
         text: 'Asset Register',
@@ -41,7 +45,8 @@ const options = {
   };
 
 export function AssetRegisterChart() {
-  return <div className='bg-white shadow-md px-1 py-3 rounded-lg'>
+  return <div className='bg-white shadow-md px-1 py-3 w-fit max-h-96 rounded-lg'>
+    <ChartFilter />
       <Doughnut options={options} data={data} />
     </div>
 }

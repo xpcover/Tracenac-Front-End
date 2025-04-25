@@ -7,7 +7,7 @@ export class dataTableService {
       return response.data?.msg;
     } catch (error: unknown) {
       console.log("DATA TABLE ERR:",error)  
-      return [];
+      throw error;
     }
   };
 
@@ -17,7 +17,7 @@ export class dataTableService {
       return response.data?.msg;
     } catch (error: unknown) {
       console.log("DATA TABLE ERR:",error)  
-      return {};
+      throw error;
     }
   };
 
@@ -27,17 +27,17 @@ export class dataTableService {
       return response.data?.msg;
     } catch (error: unknown) {
       console.log("DATA TABLE ERR:",error)  
-      return {};
+      throw error;
     }
   };
 
   static updateData = async (url: string,data: Record<string, string>) => {
     try {
-      const response = await axiosInstance.put(url,data);
+      const response = await axiosInstance.patch(url,data);
       return response.data?.msg;
     } catch (error: unknown) {
       console.log("DATA TABLE ERR:",error)  
-      return {};
+      throw error;
     }
   };
 
@@ -47,7 +47,7 @@ export class dataTableService {
       return response.data?.msg;
     } catch (error: unknown) {
       console.log("DATA TABLE ERR:",error)  
-      return {};
+      throw error;
     }
   };
 }

@@ -9,6 +9,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import ChartFilter from './ChartFilter';
 
 // Register ChartJS components
 ChartJS.register(
@@ -54,7 +55,7 @@ function ContractReport() {
     responsive: true,
     plugins: {
       legend: {
-        position: 'top',
+        position: 'bottom',
       },
       title: {
         display: true,
@@ -69,8 +70,9 @@ function ContractReport() {
   };
 
   return (
-    <div className='bg-white shadow-md px-1 py-3 rounded-lg'>
-      <Bar data={data} options={options} />
+    <div className='bg-white shadow-md px-1 py-3 h-fit rounded-lg'>
+        <ChartFilter />
+        <Bar data={data} options={options} />
     </div>
   );
 }

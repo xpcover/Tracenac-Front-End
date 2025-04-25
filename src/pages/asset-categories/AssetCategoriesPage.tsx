@@ -6,6 +6,9 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { Modal } from '@/components/ui/Modal'
 import { AssetCategory } from '@/lib/types'
 import AssetCategoryForm from './AssetCategoryForm'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { dataTableService } from '@/services/dataTable.service'
+import toast from 'react-hot-toast'
 
 const columnHelper = createColumnHelper<AssetCategory>()
 
@@ -22,48 +25,43 @@ const columns = [
     header: 'Description',
     cell: (info) => info.getValue(),
   }),
-  columnHelper.accessor('created_at', {
+  columnHelper.accessor('createdAt', {
     header: 'Created At',
     cell: (info) => format(new Date(info.getValue()), 'PPp'),
   }),
-  columnHelper.accessor('updated_at', {
+  columnHelper.accessor('updatedAt', {
     header: 'Updated At',
     cell: (info) => format(new Date(info.getValue()), 'PPp'),
   }),
 ]
 
-// Mock data - In a real app, this would come from an API
-const mockCategories: AssetCategory[] = [
-  {
-    category_id: '1',
-    tenant_id: '1',
-    category_name: 'IT Equipment',
-    description: 'Computers, laptops, and peripherals',
-    created_at: '2024-03-10T10:00:00Z',
-    updated_at: '2024-03-10T10:00:00Z',
-  },
-  {
-    category_id: '2',
-    tenant_id: '1',
-    category_name: 'Office Furniture',
-    description: 'Desks, chairs, and storage units',
-    created_at: '2024-03-09T15:30:00Z',
-    updated_at: '2024-03-10T09:15:00Z',
-  },
-]
 
 export default function AssetCategoriesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<AssetCategory | null>(null)
+
 
   const handleEdit = (category: AssetCategory) => {
     setEditingCategory(category)
     setIsModalOpen(true)
   }
 
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: dataTableService.deleteData,
+    onSuccess: () => {
+      toast.success('Asset category deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['/category'] });
+    },
+    onError: (error) => {
+      console.error('Error deleting todo:', error);
+    }
+  });
+
+
   const handleDelete = (category: AssetCategory) => {
-    // In a real app, this would make an API call
-    console.log('Delete category:', category)
+    deleteMutation.mutate(`/category/${category?._id}`)
   }
 
   return (
@@ -78,9 +76,8 @@ export default function AssetCategoriesPage() {
       />
 
       <DataTable
-        url='/assets/categories'
+        url='/category'
         columns={columns}
-        data={mockCategories}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
@@ -95,12 +92,7 @@ export default function AssetCategoriesPage() {
       >
         <AssetCategoryForm
           category={editingCategory}
-          onSubmit={(data) => {
-            // In a real app, this would make an API call
-            console.log('Form submitted:', data)
-            setIsModalOpen(false)
-            setEditingCategory(null)
-          }}
+          setIsModalOpen={setIsModalOpen}
         />
       </Modal>
     </div>

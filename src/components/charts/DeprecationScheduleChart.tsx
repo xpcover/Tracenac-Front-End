@@ -10,6 +10,7 @@ import {
   Legend,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+import ChartFilter from './ChartFilter';
 
 ChartJS.register(
   CategoryScale,
@@ -25,7 +26,7 @@ const options = {
   responsive: true,
   plugins: {
     legend: {
-      position: 'top' as const,
+      position: 'bottom',
     },
     title: {
       display: true,
@@ -56,6 +57,7 @@ const data = {
 
 export function DeprecationScheduleChart() {
   return <div className='bg-white shadow-md px-1 py-3 rounded-lg'>
-      <Line options={options} data={data} />
+        <ChartFilter />
+        <Line options={options} data={data} />
     </div>
 }

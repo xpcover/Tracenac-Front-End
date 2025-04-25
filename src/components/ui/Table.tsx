@@ -6,27 +6,27 @@ import {
   SortingState,
   useReactTable,
   getPaginationRowModel,
-} from '@tanstack/react-table'
-import { useEffect, useState } from 'react'
-import { cn } from '@/lib/utils'
-import { TableFilters } from './TableFilters'
-import { TablePagination } from './TablePagination'
-import { useDispatch, useSelector } from 'react-redux'
-import { RootState } from '@/redux/store'
-import { useQuery } from '@tanstack/react-query'
-import { dataTableService } from '@/services/dataTable.service'
-import { setTableData, tableState } from '@/redux/slices/dataTableSlice'
+} from "@tanstack/react-table";
+import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
+import { TableFilters } from "./TableFilters";
+import { TablePagination } from "./TablePagination";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
+import { useQuery } from "@tanstack/react-query";
+import { dataTableService } from "@/services/dataTable.service";
+import { setTableData, tableState } from "@/redux/slices/dataTableSlice";
 
 interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[]
-  url:string,
-  onEdit?: (row: TData) => void
-  onDelete?: (row: TData) => void
-  meta?: Record<string, any>
-  showFilters?: boolean
-  showDateFilter?: boolean
-  showPagination?: boolean
-  additionalFilters?: React.ReactNode
+  columns: ColumnDef<TData, TValue>[];
+  url: string;
+  onEdit?: (row: TData) => void;
+  onDelete?: (row: TData) => void;
+  meta?: Record<string, any>;
+  showFilters?: boolean;
+  showDateFilter?: boolean;
+  showPagination?: boolean;
+  additionalFilters?: React.ReactNode;
 }
 
 export function DataTable<TData, TValue>({
@@ -40,64 +40,59 @@ export function DataTable<TData, TValue>({
   showPagination = true,
   additionalFilters,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = useState<SortingState>([])
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [search, setSearch] = useState("");
+
   const [{ pageIndex, pageSize }, setPagination] = useState({
     pageIndex: 0,
     pageSize: 10,
-  })
-  
-  const { data:tableData } = useSelector((state: RootState) => state.dataTable)
-  const dispatch = useDispatch();
-  
-  const { data:apiData,isLoading } = useQuery({
-    queryKey: [url],
-    queryFn: () => dataTableService.fetchAllData(url),
   });
-  
+
+  const { data: tableData } = useSelector(
+    (state: RootState) => state.dataTable
+  );
+
+  const dispatch = useDispatch();
+
+  const { data: apiData, isLoading } = useQuery({
+    queryKey: [url, search],
+    queryFn: () => dataTableService.fetchAllData(url, { search }),
+  });
+
   useEffect(() => {
     dispatch(setTableData(apiData));
-  },[apiData])
-  
-  const [filteredData, setFilteredData] = useState(tableData)
+  }, [apiData]);
+
+  const [filteredData, setFilteredData] = useState(tableData);
 
   const handleSearch = (searchValue: string) => {
-    const filtered = tableData.filter((item) =>
-      Object.values(item as any).some(
-        (value) =>
-          value &&
-          value.toString().toLowerCase().includes(searchValue.toLowerCase())
-      )
-    )
-    setFilteredData(filtered)
-    setPagination((prev) => ({ ...prev, pageIndex: 0 }))
-  }
+    setSearch(searchValue);
+  };
 
   const handleDateChange = ({ from, to }: { from: string; to: string }) => {
     if (!from && !to) {
-      setFilteredData(tableData)
-      return
+      setFilteredData(tableData);
+      return;
     }
 
     const filtered = tableData.filter((item: any) => {
-      const itemDate = new Date(item.created_at || item.date)
-      const fromDate = from ? new Date(from) : null
-      const toDate = to ? new Date(to) : null
+      const itemDate = new Date(item.created_at || item.date);
+      const fromDate = from ? new Date(from) : null;
+      const toDate = to ? new Date(to) : null;
 
       if (fromDate && toDate) {
-        return itemDate >= fromDate && itemDate <= toDate
+        return itemDate >= fromDate && itemDate <= toDate;
       } else if (fromDate) {
-        return itemDate >= fromDate
+        return itemDate >= fromDate;
       } else if (toDate) {
-        return itemDate <= toDate
+        return itemDate <= toDate;
       }
-      return true
-    })
+      return true;
+    });
 
-    setFilteredData(filtered)
-    setPagination((prev) => ({ ...prev, pageIndex: 0 }))
-  }
-
-  console.log(apiData)
+    setFilteredData(filtered);
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
 
   const table = useReactTable({
     data: tableData || [],
@@ -114,11 +109,9 @@ export function DataTable<TData, TValue>({
       },
     },
     meta,
-  })
+  });
 
-
-  if(isLoading)
-    return <h4>Loading...</h4>
+  if (isLoading) return <h4>Loading...</h4>;
 
   return (
     <div className="space-y-4">
@@ -143,8 +136,8 @@ export function DataTable<TData, TValue>({
                   <th
                     key={header.id}
                     className={cn(
-                      'h-12 px-4 text-left align-middle font-medium text-gray-500',
-                      header.column.getCanSort() && 'cursor-pointer select-none'
+                      "h-12 px-4 text-left align-middle font-medium text-gray-500",
+                      header.column.getCanSort() && "cursor-pointer select-none"
                     )}
                     onClick={header.column.getToggleSortingHandler()}
                   >
@@ -202,13 +195,15 @@ export function DataTable<TData, TValue>({
         <TablePagination
           currentPage={pageIndex + 1}
           pageSize={pageSize}
-          totalItems={filteredData.length}
-          onPageChange={(page) => setPagination((prev) => ({ ...prev, pageIndex: page - 1 }))}
+          totalItems={filteredData?.length}
+          onPageChange={(page) =>
+            setPagination((prev) => ({ ...prev, pageIndex: page - 1 }))
+          }
           onPageSizeChange={(size) =>
             setPagination((prev) => ({ ...prev, pageSize: size, pageIndex: 0 }))
           }
         />
       )}
     </div>
-  )
+  );
 }

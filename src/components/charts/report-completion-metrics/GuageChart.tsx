@@ -6,6 +6,7 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
+import ChartFilter from '../ChartFilter';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -83,6 +84,8 @@ const GaugeChart = ({ value = 65 }) => {
 
   return (
       <div className='bg-white shadow-md rounded-lg w-56 h-56'>
+        <ChartFilter />
+
       <Doughnut plugins={[gaugeNeedle]} data={data} options={options} />
       </div>
   );

@@ -9,6 +9,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import ChartFilter from "../ChartFilter";
 
 ChartJS.register(
   CategoryScale,
@@ -32,7 +33,9 @@ function FinalizedReport() {
   const options = {
     responsive: true,
     plugins: {
-      legend: null,
+      legend: {
+        position: 'bottom',
+      },
       title: {
         display: true,
         text: "Number of Finalized Reports",
@@ -41,6 +44,8 @@ function FinalizedReport() {
   };
   return (
     <div className="bg-white shadow-md px-1 py-3 rounded-lg h-fit">
+        <ChartFilter />
+
       <Bar options={options} data={data} />
     </div>
   );

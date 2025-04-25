@@ -166,12 +166,12 @@ export const menuItems: MenuItem[] = [
         to: '/asset-components',
         requiredPermissions: ['VIEW_ASSET_COMPONENTS']
       },
-      {
-        icon: Tag,
-        label: 'Asset Labels',
-        to: '/asset-labels',
-        requiredPermissions: ['VIEW_ASSET_LABELS']
-      },
+      // {
+      //   icon: Tag,
+      //   label: 'Asset Labels',
+      //   to: '/asset-labels',
+      //   requiredPermissions: ['VIEW_ASSET_LABELS']
+      // },
       {
         icon: Building,
         label: 'Asset Blocks',

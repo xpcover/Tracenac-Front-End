@@ -6,15 +6,18 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { Modal } from '@/components/ui/Modal'
 import { AssetBlock } from '@/lib/types'
 import AssetBlockForm from './AssetBlockForm'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { dataTableService } from '@/services/dataTable.service'
+import toast from 'react-hot-toast'
 
 const columnHelper = createColumnHelper<AssetBlock>()
 
 const columns = [
-  columnHelper.accessor('block_id', {
-    header: 'Block ID',
+  columnHelper.accessor('tenantId', {
+    header: 'Tenant ID',
     cell: (info) => info.getValue(),
   }),
-  columnHelper.accessor('block_name', {
+  columnHelper.accessor('blockName', {
     header: 'Name',
     cell: (info) => info.getValue(),
   }),
@@ -22,39 +25,32 @@ const columns = [
     header: 'Description',
     cell: (info) => info.getValue(),
   }),
-  columnHelper.accessor('created_at', {
+  columnHelper.accessor('createdAt', {
     header: 'Created At',
     cell: (info) => format(new Date(info.getValue()), 'PPp'),
   }),
-  columnHelper.accessor('updated_at', {
+  columnHelper.accessor('updatedAt', {
     header: 'Updated At',
     cell: (info) => format(new Date(info.getValue()), 'PPp'),
   }),
 ]
 
-// Mock data - In a real app, this would come from an API
-const mockBlocks: AssetBlock[] = [
-  {
-    block_id: '1',
-    tenant_id: '1',
-    block_name: 'Block A',
-    description: 'Main office building block',
-    created_at: '2024-03-10T10:00:00Z',
-    updated_at: '2024-03-10T10:00:00Z',
-  },
-  {
-    block_id: '2',
-    tenant_id: '1',
-    block_name: 'Block B',
-    description: 'Manufacturing facility block',
-    created_at: '2024-03-09T15:30:00Z',
-    updated_at: '2024-03-10T09:15:00Z',
-  },
-]
-
 export default function AssetBlocksPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingBlock, setEditingBlock] = useState<AssetBlock | null>(null)
+
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: dataTableService.deleteData,
+    onSuccess: () => {
+      toast.success('Asset Block deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['/assets/block'] });
+    },
+    onError: (error) => {
+      console.error('Error deleting todo:', error);
+    }
+  });
 
   const handleEdit = (block: AssetBlock) => {
     setEditingBlock(block)
@@ -62,8 +58,7 @@ export default function AssetBlocksPage() {
   }
 
   const handleDelete = (block: AssetBlock) => {
-    // In a real app, this would make an API call
-    console.log('Delete block:', block)
+    deleteMutation.mutate(`/assets/block/${block?._id}`)
   }
 
   return (
@@ -79,7 +74,7 @@ export default function AssetBlocksPage() {
 
       <DataTable
         columns={columns}
-        data={mockBlocks}
+        url="/assets/block"
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
@@ -94,12 +89,7 @@ export default function AssetBlocksPage() {
       >
         <AssetBlockForm
           block={editingBlock}
-          onSubmit={(data) => {
-            // In a real app, this would make an API call
-            console.log('Form submitted:', data)
-            setIsModalOpen(false)
-            setEditingBlock(null)
-          }}
+          setEditingBlock={setEditingBlock}
         />
       </Modal>
     </div>

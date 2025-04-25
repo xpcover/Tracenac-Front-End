@@ -4,6 +4,10 @@ import { z } from 'zod'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { AssetBlock } from '@/lib/types'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { dataTableService } from '@/services/dataTable.service'
+import toast from 'react-hot-toast'
+import { set } from 'date-fns'
 
 const blockSchema = z.object({
   block_name: z.string().min(1, 'Block name is required'),
@@ -16,12 +20,12 @@ type BlockFormData = z.infer<typeof blockSchema>
 
 interface AssetBlockFormProps {
   block?: AssetBlock | null
-  onSubmit: (data: BlockFormData) => void
+  setEditingBlock: (arg: boolean) => void
 }
 
 export default function AssetBlockForm({
   block,
-  onSubmit,
+  setEditingBlock,
 }: AssetBlockFormProps) {
   const {
     register,
@@ -35,6 +39,33 @@ export default function AssetBlockForm({
       description: block?.description || '',
       latitude: block?.latitude || '',
       longitude: block?.longitude || '',
+    },
+  })
+
+  const queryClient = useQueryClient();
+
+  const createDataMutation = useMutation({
+    mutationFn: data => dataTableService.createData('/assets/block', data),
+    onSuccess: () => {
+      toast.success('Asset Block added successfully');
+      queryClient.invalidateQueries({ queryKey: ['/assets/block'] });
+      setEditingBlock(false)
+    },
+    onError: () => {
+      toast.error('Failed to add asset block');
+    },
+  })
+
+  const updateDataMutation = useMutation({
+    mutationFn: data =>  dataTableService.updateData(`/assets/block/${block?._id}`, data),
+    onSuccess: () => {
+      toast.success('Asset Block updated successfully');
+      queryClient.invalidateQueries({ queryKey: ['/assets/block'] });
+      setEditingBlock(false)
+    },
+
+    onError: () => {
+      toast.error('Failed to update asset block');
     },
   })
 
@@ -54,39 +85,26 @@ export default function AssetBlockForm({
     }
   }
 
-  const handleFormSubmit = async (data: BlockFormData) => {
+  const onSubmit = async (data: BlockFormData) => {
     const payload = {
       blockName: data.block_name,
       description: data.description,
       location: {
         latitude: parseFloat(data.latitude || '0'),
         longitude: parseFloat(data.longitude || '0'),
-      },
-    }
-
-    try {
-      const response = await fetch('https://api.tracenac.com/api/assets/block', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to submit block data')
       }
-
-      const result = await response.json()
-      console.log('Block submission successful:', result)
-      onSubmit(data)
-    } catch (error) {
-      console.error('Error submitting block data:', error)
     }
+
+    if(block) {
+      updateDataMutation.mutate(payload)
+    } else {
+      createDataMutation.mutate(payload)
+    }
+
   }
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
         <label
           htmlFor="block_name"

@@ -9,6 +9,7 @@ import {
   Legend,
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
+import ChartFilter from './ChartFilter';
 
 ChartJS.register(
   CategoryScale,
@@ -21,6 +22,9 @@ ChartJS.register(
 
 const options = {
   plugins: {
+    legend: {
+      position: 'bottom',
+    },
     title: {
       display: true,
       text: 'Bugdet vs Actual Report',
@@ -69,6 +73,7 @@ const data = {
 
 export function BudgetVsActualReport() {
   return <div className='bg-white shadow-md px-1 py-3 rounded-lg'>
-      <Bar options={options} data={data} />
+        <ChartFilter />
+        <Bar options={options} data={data} />
     </div>
 }

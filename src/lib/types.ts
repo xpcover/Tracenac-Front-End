@@ -74,8 +74,8 @@ export interface AssetCategory {
   tenant_id: string
   category_name: string
   description: string
-  created_at: string
-  updated_at: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface AssetBlock {
@@ -83,8 +83,8 @@ export interface AssetBlock {
   tenant_id: string
   block_name: string
   description: string
-  created_at: string
-  updated_at: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface Department {
@@ -150,7 +150,7 @@ export const assetSchema = z.object({
 })
 
 export const assetComponentSchema = z.object({
-  asset_id: z.string().min(1, 'Asset ID is required'),
+  assetId: z.string().min(1, 'Asset ID is required'),
   parent_component_id: z.string().nullable(),
   component_id: z.string().min(1, 'Component ID is required'),
   component_name: z.string().min(1, 'Component name is required'),
@@ -162,7 +162,8 @@ export const assetComponentSchema = z.object({
   useful_life: z.number().min(0, 'Useful life must be positive'),
   salvage_value: z.number().min(0, 'Salvage value must be positive'),
   status: z.string().min(1, 'Status is required'),
-  tenant_id: z.string().min(1, 'Tenant ID is required'),
+  tenant_id: z.string().default(localStorage.getItem('tenantId')?.toString() || ''),
+  createdAt: z.string().optional(),
 })
 
 export type Asset = z.infer<typeof assetSchema>

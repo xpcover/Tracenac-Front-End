@@ -10,6 +10,7 @@ import {
   Legend,
 } from 'chart.js';
 import { ArrowUpWideNarrow, BadgeDollarSign, BadgePercent, TrendingUp } from 'lucide-react';
+import ChartFilter from './ChartFilter';
 
 // Register ChartJS components
 ChartJS.register(
@@ -51,7 +52,7 @@ const ROIChart = () => {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'top',
+        position: 'bottom',
       },
       title: {
         display: true,
@@ -143,6 +144,7 @@ const ROIChart = () => {
       {/* Line Chart */}
       <div className="bg-white rounded-lg shadow-md p-5">
         <div className="h-80">
+        <ChartFilter />
           <Line data={chartData} options={chartOptions} />
         </div>
       </div>

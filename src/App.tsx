@@ -53,6 +53,7 @@ import BarCodeGenerate from './pages/short-urls/generate-barcode/BarCodeGenerate
 import BulkUrlListPage from './pages/short-urls/BulkUrlListPage';
 import { Provider } from 'react-redux'
 import { store } from './redux/store';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   return (
@@ -104,7 +105,7 @@ function App() {
           <Route path="reports" element={<ReportsPage />} />
           <Route path="reports/templates" element={<ReportTemplateList />} />
           <Route path="report-permissions" element={<ReportPermissionsPage />} />
-          <Route path="asset-labels" element={<AssetLabelsPage />} />
+          {/* <Route path="asset-labels" element={<AssetLabelsPage />} /> */}
           <Route path="barcode-scans" element={<BarcodeScansPage />} />
           <Route path="impairment-records" element={<ImpairmentRecordsPage />} />
           <Route path="leases" element={<LeasesPage />} />
@@ -127,6 +128,7 @@ function App() {
         </Route>
       </Routes>
     </BrowserRouter>
+        <Toaster />
     </Provider>
   );
 }

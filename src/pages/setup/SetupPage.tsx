@@ -3,14 +3,13 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { MenuArrangement } from '@/components/setup/MenuArrangement'
 import { CategorySetup } from '@/components/setup/CategorySetup'
 import { ReportBuilder } from '@/components/setup/ReportBuilder'
-import { ReasonSetup } from '@/components/setup/ReasonSeup'
-import ReportType from '@/components/setup/ReportType'
+import { ReasonSetup } from '@/components/setup/ReasonSetup'
+import ReportType from '@/components/setup/ReportTypeTable'
 
 const TABS = [
   { id: 'menu', label: 'Menu Arrangement' },
-  { id: 'reportType', label: 'Report Type' },
-  { id: 'reasons', label: 'Reason Form' },
   { id: 'reports', label: 'Report Builder' },
+  { id: 'reasons', label: 'Reason Form' },
   { id: 'categories', label: 'Categories & Fields' },
 ] as const
 
@@ -46,10 +45,9 @@ export default function SetupPage() {
 
       <div className="py-4">
         {activeTab === 'menu' && <MenuArrangement />}
-        {activeTab === 'reportType' && <ReportType />}
+        {activeTab === 'reports' && <ReportBuilder />}
         {activeTab === 'reasons' && <ReasonSetup />}
         {activeTab === 'categories' && <CategorySetup />}
-        {activeTab === 'reports' && <ReportBuilder />}
       </div>
     </div>
   )

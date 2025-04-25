@@ -1,373 +1,294 @@
-import { useState, useEffect } from 'react'
-import { Plus, X } from 'lucide-react'
-import Button from '../ui/Button'
-import Input from '../ui/Input'
-import { Modal } from '../ui/Modal'
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import Button from "../ui/Button";
+import Input from "../ui/Input";
+import { Modal } from "../ui/Modal";
+import ReportTypeTable from "./ReportTypeTable";
+import { ReportService } from "@/services/report.service";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-interface Report {
-  id: string
-  name: string
-  image: string
-  placement: string
-  reportFor: string
-  assetCategories: string[]
-  reason: string
-  reportType: string
-}
-
+// Type definitions
 interface Category {
-  _id: string
-  name: string
+  _id: string;
+  name: string;
 }
 
 interface Reason {
-  _id: string
-  name: string
+  _id: string;
+  name: string;
 }
 
 interface ReportType {
-  _id: string
-  name: string
+  _id: string;
+  name: string;
 }
 
+// Zod validation schema
+const reportSchema = z.object({
+  name: z.string().min(1, "Report name is required"),
+  image: z.instanceof(FileList).optional(),
+  placement: z.string().min(1, "Placement is required"),
+  reportFor: z.enum(["Customers", "Employees", "Vendors", "Partners", "Common"]),
+  assetCategories: z.string().min(1, "Asset category is required"),
+  reason: z.string().min(1, "Reason is required"),
+  reportType: z.string().min(1, "Report type is required"),
+});
+
+type ReportFormData = z.infer<typeof reportSchema>;
+
 export function ReportBuilder() {
-  const [reports, setReports] = useState<Report[]>([])
-  const [currentReport, setCurrentReport] = useState<Report>({
-    id: Date.now().toString(),
-    name: '',
-    image: 'test',
-    placement: '',
-    reportFor: '',
-    assetCategories: [],
-    reason: '',
-    reportType: '',
-  })
+  const queryClient = useQueryClient();
+  const [reportTypeModal, setReportTypeModal] = useState(false);
 
-  const [categories, setCategories] = useState<Category[]>([])
-  const [reasons, setReasons] = useState<Reason[]>([])
-  const [reportTypes, setReportTypes] = useState<ReportType[]>([])
-  const [showSuccessModal, setShowSuccessModal] = useState(false)
-  const [showFailureModal, setShowFailureModal] = useState(false)
-  const [errorMessage, setErrorMessage] = useState('')
+  // React Hook Form initialization
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    watch,
+  } = useForm<ReportFormData>({
+    resolver: zodResolver(reportSchema),
+    defaultValues: {
+      reportFor: "Customers"
+    },
+  });
 
-  useEffect(() => {
-    fetchCategories()
-    fetchReportTypes()
-  }, [])
+  const { data: reportTypes, isLoading: reportTypeLoading } = useQuery({
+    queryKey: ["reportTypes"],
+    queryFn: ReportService.getReportTypes,
+  });
 
-  const fetchCategories = async () => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      console.error('No token found in local storage')
-      return
-    }
+  const { data: reasons, isLoading: reasonLoading } = useQuery({
+    queryKey: ["reasons",watch("reportType")],
+    queryFn: () => ReportService.getReasons(watch("reportType")),
+  });
 
-    try {
-      const response = await fetch('https://api.tracenac.com/api/category', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch categories')
-      }
-
-      const data = await response.json()
-      setCategories(data)
-    } catch (error) {
-      console.error('Error fetching categories:', error)
-    }
-  }
-
-  const fetchReportTypes = async () => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      console.error('No token found in local storage')
-      return
-    }
-
-    try {
-      const response = await fetch('https://api.tracenac.com/api/report/report-type', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch report types')
-      }
-
-      const data = await response.json()
-      setReportTypes(data.data)
-    } catch (error) {
-      console.error('Error fetching report types:', error)
-    }
-  }
-
-  const fetchReasons = async (reportTypeId: string) => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      console.error('No token found in local storage')
-      return
-    }
-
-    try {
-      const response = await fetch(`https://api.tracenac.com/api/assets/reasons/${reportTypeId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch reasons')
-      }
-
-      const data = await response.json()
-      setReasons(data)
-    } catch (error) {
-      console.error('Error fetching reasons:', error)
-    }
-  }
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
-    setCurrentReport((prevReport) => ({
-      ...prevReport,
-      [name]: value,
-    }))
-
-    if (name === 'reportType') {
-      fetchReasons(value)
-    }
-  }
+  const { data: categories, isLoading: categoryLoading } = useQuery({
+    queryKey: ["categories"],
+    queryFn: ReportService.getCategories,
+  });
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    const formData = new FormData()
-    formData.append('image', file)
+    const formData = new FormData();
+    formData.append("image", file);
 
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch('https://api.tracenac.com/api/upload', {
-        method: 'POST',
+      const token = localStorage.getItem("token");
+      const response = await fetch("https://api.tracenac.com/api/upload", {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: formData,
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to upload image')
+        throw new Error("Failed to upload image");
       }
 
-      const data = await response.json()
-      setCurrentReport((prev) => ({
-        ...prev,
-        image: data.imageUrl, // Adjust this based on your API response structure
-      }))
+      const data = await response.json();
+      setValue("image", data.imageUrl); // Assuming the response contains the image URL
     } catch (error) {
-      console.error('Error uploading image:', error)
+      console.error("Error uploading image:", error);
     }
-  }
+  };
 
-  const handleAddReport = async () => {
-    const token = localStorage.getItem('token')
-    const tenantId = localStorage.getItem('tenantId')
-
-    const reportData = {
-      ...currentReport,
-      tenantId,
-    }
-
+  const onSubmit = async (data: ReportFormData) => {
     try {
-      const response = await fetch('https://api.tracenac.com/api/assets/report-template', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(reportData),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to add report template')
+      // Prepare form data for submission
+      const formData = new FormData();
+      formData.append("name", data.name);
+      if (data.image && data.image[0]) {
+        formData.append("image", data.image[0]);
       }
+      formData.append("placement", data.placement);
+      formData.append("reportFor", data.reportFor);
+      formData.append("assetCategories", data.assetCategories);
+      formData.append("reason", data.reason);
+      formData.append("reportType", data.reportType);
 
-      const data = await response.json()
-      console.log('Report template added successfully:', data)
-
-      setReports([...reports, currentReport])
-      setCurrentReport({
-        id: Date.now().toString(),
-        name: '',
-        image: 'test',
-        placement: '',
-        reportFor: '',
-        assetCategories: [],
-        reason: '',
-        reportType: '',
-      })
-      setShowSuccessModal(true)
+      // Submit the form data
+      const response = await ReportService.createReport(formData);
+      console.log("Report created:", response);
+      
+      // Invalidate queries to refresh data if needed
+      queryClient.invalidateQueries({ queryKey: ['reports'] });
+      
+      // Show success message or redirect
     } catch (error) {
-      console.error('Error adding report template:', error)
-      setErrorMessage(error.message)
-      setShowFailureModal(true)
+      console.error("Error creating report:", error);
     }
-  }
+  };
 
   return (
-    <div className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      {/* Report Name */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">Report Name</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Report Name
+        </label>
         <Input
           type="text"
-          name="name"
-          value={currentReport.name}
-          onChange={handleInputChange}
           className="mt-1"
+          {...register("name")}
         />
+        {errors.name && (
+          <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+        )}
       </div>
 
+      {/* Report Image */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">Report Image/Icon</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Report Image/Icon
+        </label>
         <div className="mt-1 flex items-center gap-4">
-          {/* {currentReport.image && (
-            <img
-              src={currentReport.image}
-              alt="Report icon"
-              className="h-12 w-12 object-cover rounded-md"
-            />
-          )} */}
           <Input
             type="file"
             accept="image/*"
             onChange={handleImageUpload}
             className="mt-1"
+            {...register("image")}
           />
         </div>
+        {errors.image && (
+          <p className="mt-1 text-sm text-red-600">{errors.image.message}</p>
+        )}
       </div>
 
+      {/* Placement */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">Placement</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Placement
+        </label>
         <Input
           type="text"
-          name="placement"
-          value={currentReport.placement}
-          onChange={handleInputChange}
           className="mt-1"
+          {...register("placement")}
         />
+        {errors.placement && (
+          <p className="mt-1 text-sm text-red-600">{errors.placement.message}</p>
+        )}
       </div>
 
+      {/* Report For */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">Report for</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Report for
+        </label>
         <select
-          name="reportFor"
-          value={currentReport.reportFor}
-          onChange={handleInputChange}
           className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          {...register("reportFor")}
         >
-          <option value="">Select</option>
           <option value="Customers">Customers</option>
           <option value="Employees">Employees</option>
           <option value="Vendors">Vendors</option>
           <option value="Partners">Partners</option>
           <option value="Common">Common</option>
         </select>
+        {errors.reportFor && (
+          <p className="mt-1 text-sm text-red-600">{errors.reportFor.message}</p>
+        )}
       </div>
 
+      {/* Assets */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">Assets</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Assets
+        </label>
         <select
-          name="assetCategories"
-          value={currentReport.assetCategories}
-          onChange={(e) =>
-            setCurrentReport({
-              ...currentReport,
-              assetCategories: Array.from(e.target.selectedOptions, (option) => option.value),
-            })
-          }
           className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-        >
-          {categories.map((category) => (
-            <option key={category._id} value={category.name}>
-              {category.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Report Type</label>
-        <select
-          name="reportType"
-          value={currentReport.reportType}
-          onChange={handleInputChange}
-          className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          {...register("assetCategories")}
         >
           <option value="">Select</option>
-          {reportTypes.map((reportType) => (
-            <option key={reportType._id} value={reportType._id}>
-              {reportType.name}
-            </option>
-          ))}
+          {categoryLoading ? (
+            <option>Loading...</option>
+          ) : (
+            categories && categories.length > 0 && categories.map((category: Category) => (
+              <option key={category._id} value={category._id}>
+                {category.name}
+              </option>
+            ))
+          )}
         </select>
+        {errors.assetCategories && (
+          <p className="mt-1 text-sm text-red-600">{errors.assetCategories.message}</p>
+        )}
       </div>
 
+      {/* Report Type */}
+      <div className="flex gap-4 items-end">
+        <div className="w-full">
+          <label className="block text-sm font-medium text-gray-700">
+            Report Type
+          </label>
+          <select
+            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            {...register("reportType")}
+          >
+            <option value="">Select</option>
+            {reportTypeLoading ? (
+              <option>Loading...</option>
+            ) : (
+              reportTypes && reportTypes.length > 0 && reportTypes.map((type: ReportType) => (
+                <option key={type._id} value={type._id}>
+                  {type.name}
+                </option>
+              ))
+            )}
+          </select>
+          {errors.reportType && (
+            <p className="mt-1 text-sm text-red-600">{errors.reportType.message}</p>
+          )}
+        </div>
+        <Button
+          type="button"
+          className="w-fit text-nowrap"
+          onClick={() => setReportTypeModal(true)}
+        >
+          Add Report Type
+        </Button>
+      </div>
+
+      {/* Reason */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">Reason</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Reason
+        </label>
         <select
-          name="reason"
-          value={currentReport.reason}
-          onChange={handleInputChange}
           className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          {...register("reason")}
         >
           <option value="">Select</option>
-          {reasons.map((reason) => (
-            <option key={reason._id} value={reason._id}>
-              {reason.name}
-            </option>
-          ))}
+          {reasonLoading ? (
+            <option>Loading...</option>
+          ) : (
+            reasons && reasons.length > 0 && reasons.map((reason: Reason) => (
+              <option key={reason._id} value={reason._id}>
+                {reason.name}
+              </option>
+            ))
+          )}
         </select>
+        {errors.reason && (
+          <p className="mt-1 text-sm text-red-600">{errors.reason.message}</p>
+        )}
       </div>
 
-      <Button onClick={handleAddReport} className="mt-4">
+      <Button type="submit" className="mt-4">
         Save Report
       </Button>
 
-      <Modal
-        isOpen={showSuccessModal}
-        onClose={() => setShowSuccessModal(false)}
-        title="Success"
-      >
-        <div className="p-4">
-          <p className="mt-2">Report template added successfully!</p>
-          <Button onClick={() => setShowSuccessModal(false)} className="mt-4">
-            Close
-          </Button>
-        </div>
-      </Modal>
-
-      <Modal
-        isOpen={showFailureModal}
-        onClose={() => setShowFailureModal(false)}
-        title="Error"
-      >
-        <div className="p-4">
-          <p className="mt-2">Failed to add report template: {errorMessage}</p>
-          <Button onClick={() => setShowFailureModal(false)} className="mt-4">
-            Close
-          </Button>
-        </div>
-      </Modal>
-    </div>
-  )
+      <ReportTypeTable
+        reportTypeModal={reportTypeModal}
+        setReportTypeModal={setReportTypeModal}
+      />
+    </form>
+  );
 }
