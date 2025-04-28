@@ -11,9 +11,9 @@ export class dataTableService {
     }
   };
 
-  static fetchSingleData = async (url: string,params?: Record<string, string>) => {
+  static fetchSingleData = async (url: string) => {
     try {
-      const response = await axiosInstance.get(url,{params});
+      const response = await axiosInstance.get(url);
       return response.data?.msg;
     } catch (error: unknown) {
       console.log("DATA TABLE ERR:",error)  

@@ -7,12 +7,13 @@ import Input from "../ui/Input";
 import { Modal } from "../ui/Modal";
 import ReportTypeTable from "./ReportTypeTable";
 import { ReportService } from "@/services/report.service";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 
 // Type definitions
 interface Category {
   _id: string;
-  name: string;
+  category_name: string;
 }
 
 interface Reason {
@@ -30,7 +31,13 @@ const reportSchema = z.object({
   name: z.string().min(1, "Report name is required"),
   image: z.instanceof(FileList).optional(),
   placement: z.string().min(1, "Placement is required"),
-  reportFor: z.enum(["Customers", "Employees", "Vendors", "Partners", "Common"]),
+  reportFor: z.enum([
+    "Customers",
+    "Employees",
+    "Vendors",
+    "Partners",
+    "Common",
+  ]),
   assetCategories: z.string().min(1, "Asset category is required"),
   reason: z.string().min(1, "Reason is required"),
   reportType: z.string().min(1, "Report type is required"),
@@ -47,12 +54,11 @@ export function ReportBuilder() {
     register,
     handleSubmit,
     formState: { errors },
-    setValue,
     watch,
   } = useForm<ReportFormData>({
     resolver: zodResolver(reportSchema),
     defaultValues: {
-      reportFor: "Customers"
+      reportFor: "Customers",
     },
   });
 
@@ -62,7 +68,7 @@ export function ReportBuilder() {
   });
 
   const { data: reasons, isLoading: reasonLoading } = useQuery({
-    queryKey: ["reasons",watch("reportType")],
+    queryKey: ["reasons", watch("reportType")],
     queryFn: () => ReportService.getReasons(watch("reportType")),
   });
 
@@ -71,79 +77,40 @@ export function ReportBuilder() {
     queryFn: ReportService.getCategories,
   });
 
+  const mutation = useMutation({
+    mutationFn: ReportService.createReport,
+    onSuccess: () => {
+      toast.success("Report created successfully");
+    },
+    onError: () => {
+      toast.error("Error creating report");
+    },
+  });
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const formData = new FormData();
-    formData.append("image", file);
-
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("https://api.tracenac.com/api/upload", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to upload image");
-      }
-
-      const data = await response.json();
-      setValue("image", data.imageUrl); // Assuming the response contains the image URL
-    } catch (error) {
-      console.error("Error uploading image:", error);
-    }
+    formData.append("image", "1.jpg");
   };
 
   const onSubmit = async (data: ReportFormData) => {
-    try {
-      // Prepare form data for submission
-      const formData = new FormData();
-      formData.append("name", data.name);
-      if (data.image && data.image[0]) {
-        formData.append("image", data.image[0]);
-      }
-      formData.append("placement", data.placement);
-      formData.append("reportFor", data.reportFor);
-      formData.append("assetCategories", data.assetCategories);
-      formData.append("reason", data.reason);
-      formData.append("reportType", data.reportType);
-
-      // Submit the form data
-      const response = await ReportService.createReport(formData);
-      console.log("Report created:", response);
-      
-      // Invalidate queries to refresh data if needed
-      queryClient.invalidateQueries({ queryKey: ['reports'] });
-      
-      // Show success message or redirect
-    } catch (error) {
-      console.error("Error creating report:", error);
-    }
+    mutation.mutate({...data,image:"1.jpg"});
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      {/* Report Name */}
       <div>
         <label className="block text-sm font-medium text-gray-700">
           Report Name
         </label>
-        <Input
-          type="text"
-          className="mt-1"
-          {...register("name")}
-        />
+        <Input type="text" className="mt-1" {...register("name")} />
         {errors.name && (
           <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
         )}
       </div>
 
-      {/* Report Image */}
       <div>
         <label className="block text-sm font-medium text-gray-700">
           Report Image/Icon
@@ -167,13 +134,11 @@ export function ReportBuilder() {
         <label className="block text-sm font-medium text-gray-700">
           Placement
         </label>
-        <Input
-          type="text"
-          className="mt-1"
-          {...register("placement")}
-        />
+        <Input type="text" className="mt-1" {...register("placement")} />
         {errors.placement && (
-          <p className="mt-1 text-sm text-red-600">{errors.placement.message}</p>
+          <p className="mt-1 text-sm text-red-600">
+            {errors.placement.message}
+          </p>
         )}
       </div>
 
@@ -193,7 +158,9 @@ export function ReportBuilder() {
           <option value="Common">Common</option>
         </select>
         {errors.reportFor && (
-          <p className="mt-1 text-sm text-red-600">{errors.reportFor.message}</p>
+          <p className="mt-1 text-sm text-red-600">
+            {errors.reportFor.message}
+          </p>
         )}
       </div>
 
@@ -210,15 +177,19 @@ export function ReportBuilder() {
           {categoryLoading ? (
             <option>Loading...</option>
           ) : (
-            categories && categories.length > 0 && categories.map((category: Category) => (
+            categories &&
+            categories.length > 0 &&
+            categories.map((category: Category) => (
               <option key={category._id} value={category._id}>
-                {category.name}
+                {category?.category_name}
               </option>
             ))
           )}
         </select>
         {errors.assetCategories && (
-          <p className="mt-1 text-sm text-red-600">{errors.assetCategories.message}</p>
+          <p className="mt-1 text-sm text-red-600">
+            {errors.assetCategories.message}
+          </p>
         )}
       </div>
 
@@ -236,7 +207,9 @@ export function ReportBuilder() {
             {reportTypeLoading ? (
               <option>Loading...</option>
             ) : (
-              reportTypes && reportTypes.length > 0 && reportTypes.map((type: ReportType) => (
+              reportTypes &&
+              reportTypes.length > 0 &&
+              reportTypes.map((type: ReportType) => (
                 <option key={type._id} value={type._id}>
                   {type.name}
                 </option>
@@ -244,7 +217,9 @@ export function ReportBuilder() {
             )}
           </select>
           {errors.reportType && (
-            <p className="mt-1 text-sm text-red-600">{errors.reportType.message}</p>
+            <p className="mt-1 text-sm text-red-600">
+              {errors.reportType.message}
+            </p>
           )}
         </div>
         <Button
@@ -269,12 +244,19 @@ export function ReportBuilder() {
           {reasonLoading ? (
             <option>Loading...</option>
           ) : (
-            reasons && reasons.length > 0 && reasons.map((reason: Reason) => (
+            reasons &&
+            reasons.length > 0 &&
+            reasons.map((reason: Reason) => (
               <option key={reason._id} value={reason._id}>
                 {reason.name}
               </option>
             ))
           )}
+          {
+            reasons?.length === 0 && (
+              <option value="" disabled>No Reason Found</option>
+            )
+          }
         </select>
         {errors.reason && (
           <p className="mt-1 text-sm text-red-600">{errors.reason.message}</p>

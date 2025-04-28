@@ -6,8 +6,11 @@ import { DataTable } from '@/components/ui/Table'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Modal } from '@/components/ui/Modal'
 import { Asset } from '@/lib/types'
-import AssetForm from './AssetForm'
+import AssetForm from './AddEditAsset'
 import { useDataTable } from '@/hooks/useDataTable'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { dataTableService } from '@/services/dataTable.service'
+import toast from 'react-hot-toast'
 
 const columnHelper = createColumnHelper<Asset>()
 
@@ -105,23 +108,27 @@ const ASSET_STATUS_OPTIONS = [
 
 export default function AssetsPage() {
   const navigate = useNavigate()
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingAsset, setEditingAsset] = useState<Asset | null>(null)
 
-  const { createData, updateData, deleteData } = useDataTable();
+  const queryClient = useQueryClient();
 
-  const handleEdit = (asset: Asset) => {
-    setEditingAsset(asset)
-    setIsModalOpen(true)
-  }
-
+  const deleteMutation = useMutation({
+    mutationFn: dataTableService.deleteData,
+    onSuccess: () => {
+      toast.success('Asset deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['/assets'] });
+    },
+    onError: (error) => {
+      console.error('Error deleting asset:', error);
+    }
+  });
+  
   const handleDelete = (asset: Asset) => {
-    // In a real app, this would make an API call
     console.log('Delete asset:', asset)
   }
 
+  
   const handleAssetClick = (asset: Asset) => {
-    navigate(`/assets/${asset.asset_id}`)
+    navigate(`/assets/${asset?.asset_id}`)
   }
 
   const additionalFilters = (
@@ -137,7 +144,7 @@ export default function AssetsPage() {
       ))}
     </select>
   )
-
+ 
   return (
     <div>
       <PageHeader
@@ -145,14 +152,14 @@ export default function AssetsPage() {
         description="Manage your organization's assets"
         action={{
           label: 'Add Asset',
-          onClick: () => setIsModalOpen(true),
+          onClick: () => navigate('/assets/add')
         }}
       />
 
       <DataTable
         url="/assets"
         columns={columns}
-        onEdit={handleEdit}
+        onEdit={(asset) => navigate(`/assets/edit/${asset?._id}`)}
         onDelete={handleDelete}
         showDateFilter
         additionalFilters={additionalFilters}
@@ -160,30 +167,6 @@ export default function AssetsPage() {
           onAssetClick: handleAssetClick,
         }}
       />
-
-        <Modal
-          isOpen={isModalOpen}
-          onClose={() => {
-            setIsModalOpen(false)
-            setEditingAsset(null)
-          }}
-          title={editingAsset ? 'Edit Asset' : 'Add Asset'}
-        >
-          <AssetForm
-            asset={editingAsset}
-            onSubmit={async(data) => {
-              const result = await createData.mutateAsync({
-                url: '/assets',
-                data
-              });
-              
-              console.log('Created:', result);
-              
-              setIsModalOpen(false)
-              setEditingAsset(null)
-            }}
-          />
-        </Modal>
     </div>
   )
 }

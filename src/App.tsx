@@ -54,6 +54,7 @@ import BulkUrlListPage from './pages/short-urls/BulkUrlListPage';
 import { Provider } from 'react-redux'
 import { store } from './redux/store';
 import { Toaster } from 'react-hot-toast';
+import AddEditAssetPage from './pages/assets/AddEditAsset';
 
 function App() {
   return (
@@ -92,6 +93,8 @@ function App() {
           <Route path="locations" element={<LocationsPage />} />
           <Route path="cost-centres" element={<CostCentresPage />} />
           <Route path="assets" element={<AssetsPage />} />
+          <Route path="assets/add" element={<AddEditAssetPage />} />
+          <Route path="assets/edit/:id" element={<AddEditAssetPage />} />
           <Route path="assets/:id" element={<AssetDetailsPage />} />
           <Route path="assets/:id/timeline" element={<AssetTimelinePage />} />
           <Route path="asset-components" element={<AssetComponentsPage />} />

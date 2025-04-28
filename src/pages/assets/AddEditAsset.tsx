@@ -3,15 +3,20 @@ import { useForm } from 'react-hook-form'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import axios from 'axios'
+import { useParams } from 'react-router-dom'
+import { useMutation, useQueries, useQuery } from '@tanstack/react-query'
+import { dataTableService } from '@/services/dataTable.service'
+import toast from 'react-hot-toast'
+import ApiService from '@/services/api.service'
 
 const ASSET_TYPES = ['Owned', 'Leased', 'WIP']
 const DEPRECIATION_METHODS = ['SLM', 'WDV']
 const ASSET_STATUSES = ['Active', 'Sold', 'Discarded', 'Relocated']
 
 type AssetFormData = {
-  asset_id?: number
+  assetId?: number
   asset_code: string
-  asset_name: string
+  assetName: string
   asset_type: string
   category_id: string
   block_id: string
@@ -38,24 +43,35 @@ type AssetFormData = {
   notes: string
 }
 
-interface AssetFormProps {
-  asset?: Partial<AssetFormData>
-  onSubmit: (data: AssetFormData) => void
-}
 
-export default function AssetForm({ asset, onSubmit }: AssetFormProps) {
-  const [categories, setCategories] = useState([])
-  const [departments, setDepartments] = useState([])
-  const [locations, setLocations] = useState([])
-  const [costCentres, setCostCentres] = useState([])
-  const [blocks, setBlocks] = useState([])
+export default function AddEditAssetPage() {
+
+  const { id } = useParams()
+
+  const { data: asset, isLoading } = useQuery({
+    queryKey: ['asset', id],
+    queryFn: () => dataTableService.fetchSingleData(`/assets/${id}`),
+    enabled: !!id
+  })
+
+  const [categories, departments, locations, costCentres, blocks] = useQueries({
+      queries: [
+        { queryKey: ['catogories'], queryFn: () => ApiService.get('/category') },
+        { queryKey: ['departments'], queryFn: () => ApiService.get('/department/departments') },
+        { queryKey: ['locations'], queryFn: () => ApiService.get('/department/location') },
+        { queryKey: ['costCentres'], queryFn: () => ApiService.get('department/cost-center') },
+        { queryKey: ['/assets/block'], queryFn: () => ApiService.get('/assets/block') },
+      ]
+    });
+
 
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<AssetFormData>({
-    defaultValues: asset || {
+    defaultValues: {
       purchase_currency: 'INR',
       exchange_rate: 1.0,
       lease_end_date: null
@@ -63,45 +79,57 @@ export default function AssetForm({ asset, onSubmit }: AssetFormProps) {
   })
 
   useEffect(() => {
-    async function fetchDropdownData() {
-      try {
-        const [
-          categoriesRes, 
-          departmentsRes, 
-          locationsRes, 
-          costCentresRes,
-          blocksRes
-        ] = await Promise.all([
-          axios.get('/categories'),
-          axios.get('/departments'),
-          axios.get('/locations'),
-          axios.get('/cost-centres'),
-          axios.get('/blocks')
-        ])
-
-        console.log("===>form",categoriesRes,departmentsRes,locationsRes,costCentresRes,blocksRes);
-        
-        // setCategories(categoriesRes?.data || [])
-        // setDepartments(departmentsRes?.data || [])
-        // setLocations(locationsRes?.data || [])
-        // setCostCentres(costCentresRes?.data || [])
-        // setBlocks(blocksRes?.data || [])
-      } catch (error) {
-        console.error('Error fetching dropdown data:', error)
+    if (asset) {
+        reset(asset)
       }
+  },[asset])
+
+  const createData = useMutation({
+    mutationFn: data => dataTableService.createData('/assets', data),
+    onSuccess: () => {
+      toast.success("Asset added successfully");
+    },
+    onError: () => {
+      toast.error("Failed to add asset");
     }
-    fetchDropdownData()
-  }, [])
+  })
+
+  const updateData = useMutation({
+    mutationFn: (data) => dataTableService.updateData(`/assets/${id}`, data),
+    onSuccess: () => {
+      toast.success("Asset updated successfully");
+    },
+    onError: () => {
+      toast.error("Failed to update asset");
+    }
+  })
+
+  const onSubmit = (data: any) =>{
+    console.log("===>2",data)
+      if(id){
+        updateData.mutate(data);
+      }else{
+        createData.mutate(data);
+      }
+  }
+
+  if(isLoading || [categories, departments, locations, costCentres, blocks].some(query => query.isLoading)){
+    return <div>Loading...</div>
+  }
+
+  console.log("===>1",asset);
+
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* Basic Information */}
+      <h1 className='text-2xl font-bold'>{id ? 'Edit Asset' : 'Add Asset'}</h1>
       <div className="space-y-4">
         <h3 className="text-lg font-medium">Basic Information</h3>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Asset ID</label>
-            <Input type="number" {...register('asset_id')} className="mt-1" />
+            <Input type="number" {...register('assetId')} className="mt-1" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Asset Name</label>
@@ -137,9 +165,9 @@ export default function AssetForm({ asset, onSubmit }: AssetFormProps) {
             <label className="block text-sm font-medium text-gray-700">Category</label>
             <select {...register('category_id')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
               <option value="">Select Category</option>
-              {categories.map((category: any) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
+              {categories?.data?.length > 0 && categories?.data.map((category: any) => (
+                <option key={category?.category_id} value={category?.category_id}>
+                  {category?.category_name}
                 </option>
               ))}
             </select>
@@ -148,9 +176,9 @@ export default function AssetForm({ asset, onSubmit }: AssetFormProps) {
             <label className="block text-sm font-medium text-gray-700">Block</label>
             <select {...register('block_id')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
               <option value="">Select Block</option>
-              {blocks.map((block: any) => (
-                <option key={block.id} value={block.id}>
-                  {block.name}
+              {blocks?.data?.length > 0 && blocks?.data.map((block: any) => (
+                <option key={block?._id} value={block?._id}>
+                  {block?.blockName}
                 </option>
               ))}
             </select>
@@ -162,9 +190,9 @@ export default function AssetForm({ asset, onSubmit }: AssetFormProps) {
             <label className="block text-sm font-medium text-gray-700">Department</label>
             <select {...register('department_id')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
               <option value="">Select Department</option>
-              {departments.map((department: any) => (
-                <option key={department.id} value={department.id}>
-                  {department.name}
+              {departments?.data?.length > 0 && departments?.data.map((department: any) => (
+                <option key={department?._id} value={department?._id}>
+                  {department?.departmentName}
                 </option>
               ))}
             </select>
@@ -173,9 +201,9 @@ export default function AssetForm({ asset, onSubmit }: AssetFormProps) {
             <label className="block text-sm font-medium text-gray-700">Location</label>
             <select {...register('location_id')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
               <option value="">Select Location</option>
-              {locations.map((location: any) => (
-                <option key={location.id} value={location.id}>
-                  {location.name}
+              {locations?.data?.length > 0 && locations?.data.map((location: any) => (
+                <option key={location?._id} value={location?._id}>
+                  {location?.location_name}
                 </option>
               ))}
             </select>
@@ -187,9 +215,9 @@ export default function AssetForm({ asset, onSubmit }: AssetFormProps) {
             <label className="block text-sm font-medium text-gray-700">Cost Centre</label>
             <select {...register('cost_centre_id')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
               <option value="">Select Cost Centre</option>
-              {costCentres.map((costCentre: any) => (
-                <option key={costCentre.id} value={costCentre.id}>
-                  {costCentre.name}
+              {costCentres?.data?.length > 0 && costCentres?.data.map((costCentre: any) => (
+                <option key={costCentre?.id} value={costCentre?._id}>
+                  {costCentre?.costCentreName}
                 </option>
               ))}
             </select>

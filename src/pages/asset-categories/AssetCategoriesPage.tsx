@@ -55,7 +55,7 @@ export default function AssetCategoriesPage() {
       queryClient.invalidateQueries({ queryKey: ['/category'] });
     },
     onError: (error) => {
-      console.error('Error deleting todo:', error);
+      console.error('Error deleting asset category:', error);
     }
   });
 
