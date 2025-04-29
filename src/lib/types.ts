@@ -88,11 +88,10 @@ export interface AssetBlock {
 }
 
 export interface Department {
-  department_id: string
-  tenant_id: string
-  department_name: string
-  created_at: string
-  updated_at: string
+  tenantId: string
+  departmentName: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface Location {
