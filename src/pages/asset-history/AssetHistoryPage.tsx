@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { format } from 'date-fns'
 import { createColumnHelper } from '@tanstack/react-table'
 import { Link, useNavigate } from 'react-router-dom'
@@ -6,7 +6,6 @@ import { DataTable } from '@/components/ui/Table'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Modal } from '@/components/ui/Modal'
 import AssetHistoryForm from './AssetHistoryForm'
-import axios from 'axios'
 
 interface AssetHistory {
   _id: string

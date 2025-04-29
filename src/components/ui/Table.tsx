@@ -55,8 +55,8 @@ export function DataTable<TData, TValue>({
   const dispatch = useDispatch();
 
   const { data: apiData, isLoading } = useQuery({
-    queryKey: [url, search],
-    queryFn: () => dataTableService.fetchAllData(url, { search }),
+    queryKey: [url, search, pageSize],
+    queryFn: () => dataTableService.fetchAllData(url, { search, limit: pageSize}),
   });
 
   useEffect(() => {
