@@ -6,65 +6,29 @@ import Button from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import Input from '@/components/ui/Input'
 import { Role } from '@/lib/types'
-
-const mockRoles: Role[] = [
-  {
-    id: '1',
-    name: 'Admin',
-    permissions: [
-      'VIEW_DASHBOARD',
-      'VIEW_TENANTS',
-      'VIEW_SHORT_URLS',
-      'VIEW_CREATE_REPORTS',
-      'VIEW_REPORTS',
-      'VIEW_MANAGE_ASSETS',
-      'VIEW_BUSINESS_SETTINGS',
-      'VIEW_SETTINGS',
-      'VIEW_DOCUMENTATION',
-    ],
-  },
-  {
-    id: '2',
-    name: 'Editor',
-    permissions: [
-      'VIEW_DASHBOARD',
-      'VIEW_SHORT_URLS',
-      'VIEW_CREATE_REPORTS',
-      'VIEW_REPORTS',
-      'VIEW_DOCUMENTATION',
-    ],
-  },
-]
+import { axiosInstance } from '@/config/axiosInstance'
+import toast from 'react-hot-toast'
 
 export default function PermissionsPage() {
-  const [roles, setRoles] = useState<Role[]>(mockRoles)
+  const [roles, setRoles] = useState<Role[]>([])
   const [selectedRole, setSelectedRole] = useState<Role | null>(null)
   const [showAddRoleModal, setShowAddRoleModal] = useState(false)
   const [newRoleName, setNewRoleName] = useState('')
 
-  useEffect(() => {
-    // Fetch roles from the API
-    const fetchRoles = async () => {
-      try {
-        const response = await fetch('https://api.tracenac.com/api/tenant/get-roles', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-        })
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch roles')
-        }
-
-        const data = await response.json()
-        setRoles(data.msg)
-      } catch (error) {
-        console.error('Error fetching roles:', error)
-      }
+  const fetchRole = async () => {
+    try {
+      const response = await axiosInstance.get("/tenant/roles");
+      setRoles(response.data.msg);
+    } catch (error) {
+      console.error(error);
     }
+  }
 
-    fetchRoles()
-  }, [])
+  console.log(selectedRole)
+
+  useEffect(()=>{
+    fetchRole()
+  },[])
 
   const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const roleName = e.target.value
@@ -86,62 +50,34 @@ export default function PermissionsPage() {
     })
   }
 
-  const handleAddRole = async () => {
-    const newRole: Role = {
-      tenantId: localStorage.getItem('tenantId'),
-      name: newRoleName,
-      permissions: [],
-    }
-
-    try {
-      const response = await fetch('https://api.tracenac.com/api/client/roles', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify(newRole),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to add role')
-      }
-
-      const data = await response.json()
-      console.log('Role added successfully:', data)
-
-      setRoles([...roles, newRole])
-      setShowAddRoleModal(false)
-      setNewRoleName('')
-    } catch (error) {
-      console.error('Error adding role:', error)
-    }
-  }
-
   const handleSavePermissions = async () => {
-    if (!selectedRole) return
-
+    if (!selectedRole) return;
+  
     try {
-      const response = await fetch('https://api.tracenac.com/api/tenant/roles', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify(selectedRole),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to save permissions')
-      }
-
-      const data = await response.json()
-      console.log('Permissions saved successfully:', data)
+      await axiosInstance.put(
+        `/tenant/role-edit/${selectedRole._id}`,
+        selectedRole,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
+  
+      // Show success toast
+      toast.success('Permissions saved successfully');
+  
+      // Optionally invalidate queries if using React Query
+      // queryClient.invalidateQueries({ queryKey: ['/department/departments'] });
+  
+      // console.log('Permissions saved successfully:', response.data);
     } catch (error) {
-      console.error('Error saving permissions:', error)
+      console.error('Error saving permissions:', error);
+      toast.error('Failed to save permissions');
     }
-  }
-
+  };
+  
   const renderMenuItems = (items: typeof menuItems, parentLabel: string = '') => {
     return items.map(item => (
       <div key={item.label} className="flex flex-col">
@@ -197,9 +133,9 @@ export default function PermissionsPage() {
         </select>
       </div>
 
-      <Button onClick={() => setShowAddRoleModal(true)} className="mt-4">
+      {/* <Button onClick={() => setShowAddRoleModal(true)} className="mt-4">
         Add Role
-      </Button>
+      </Button> */}
 
       {selectedRole && (
         <div>
@@ -213,7 +149,7 @@ export default function PermissionsPage() {
         </div>
       )}
 
-      {showAddRoleModal && (
+      {/* {showAddRoleModal && (
         <Modal isOpen={showAddRoleModal} onClose={() => setShowAddRoleModal(false)} title="Add Role">
           <div className="p-4">
             <label className="block text-sm font-medium text-gray-700">Role Name</label>
@@ -228,7 +164,7 @@ export default function PermissionsPage() {
             </Button>
           </div>
         </Modal>
-      )}
+      )} */}
     </div>
   )
 }

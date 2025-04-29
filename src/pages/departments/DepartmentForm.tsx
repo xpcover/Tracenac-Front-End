@@ -16,7 +16,7 @@ type DepartmentFormData = z.infer<typeof departmentSchema>
 
 interface DepartmentFormProps {
   department?: Department | null
-  setEditingDepartment: (arg: boolean) => void
+  setIsModalOpen: (arg: boolean) => void
 }
 
 
@@ -68,9 +68,7 @@ export default function DepartmentForm({
 
 
   const onSubmit = async(data:Department)=>{
-    // const payload = {
-    //   departmentName: data?.departmentName || ''
-    // }
+
     if(department){
       updateDataMutation.mutate(data)
     }else{

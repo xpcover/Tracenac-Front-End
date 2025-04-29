@@ -5,25 +5,16 @@ import { DataTable } from '@/components/ui/Table'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Modal } from '@/components/ui/Modal'
 import BudgetForm from './BudgetForm'
+import { Budget } from '@/lib/types'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { dataTableService } from '@/services/dataTable.service'
+import toast from 'react-hot-toast'
 
-interface Budget {
-  budget_id: string
-  tenant_id: string
-  asset_id: string
-  fiscal_year: string
-  budget_amount: number
-  actual_amount: number
-  variance: number
-  created_by: string
-  updated_by: string
-  created_at: string
-  updated_at: string
-}
 
 const columnHelper = createColumnHelper<Budget>()
 
 const columns = [
-  columnHelper.accessor('asset_id', {
+  columnHelper.accessor('assetId', {
     header: 'Asset ID',
     cell: (info) => info.getValue(),
   }),
@@ -35,11 +26,7 @@ const columns = [
     header: 'Budget',
     cell: (info) => (
       <span className="font-mono">
-        ${' '}
-        {info.getValue().toLocaleString(undefined, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}
+        $ {info.getValue()}
       </span>
     ),
   }),
@@ -47,18 +34,16 @@ const columns = [
     header: 'Actual',
     cell: (info) => (
       <span className="font-mono">
-        ${' '}
-        {info.getValue().toLocaleString(undefined, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}
+        $ {info.getValue()}
       </span>
     ),
   }),
   columnHelper.accessor('variance', {
     header: 'Variance',
     cell: (info) => {
-      const variance = info.getValue()
+      const varianceStr = info.getValue(); // this is string like "2000" or "-2000"
+      const variance = Number(varianceStr); // convert temporarily just for color
+
       return (
         <span
           className={`font-mono ${
@@ -69,59 +54,39 @@ const columns = [
               : 'text-gray-600'
           }`}
         >
-          ${' '}
-          {variance.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-            signDisplay: 'always',
-          })}
+          $ {varianceStr}
         </span>
       )
     },
   }),
-  columnHelper.accessor('created_by', {
+  columnHelper.accessor('createdBy', {
     header: 'Created By',
     cell: (info) => info.getValue(),
   }),
-  columnHelper.accessor('created_at', {
+  columnHelper.accessor('createdAt', {
     header: 'Created At',
     cell: (info) => format(new Date(info.getValue()), 'PPp'),
   }),
-]
+];
+
 
 // Mock data
-const mockBudgets: Budget[] = [
-  {
-    budget_id: '1',
-    tenant_id: '1',
-    asset_id: 'LAP001',
-    fiscal_year: '2024',
-    budget_amount: 3000,
-    actual_amount: 2800,
-    variance: 200,
-    created_by: 'USER001',
-    updated_by: 'USER001',
-    created_at: '2024-01-01T10:00:00Z',
-    updated_at: '2024-01-01T10:00:00Z',
-  },
-  {
-    budget_id: '2',
-    tenant_id: '1',
-    asset_id: 'SRV001',
-    fiscal_year: '2024',
-    budget_amount: 5000,
-    actual_amount: 5500,
-    variance: -500,
-    created_by: 'USER001',
-    updated_by: 'USER001',
-    created_at: '2024-01-01T11:00:00Z',
-    updated_at: '2024-01-01T11:00:00Z',
-  },
-]
-
 export default function BudgetsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null)
+
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: dataTableService.deleteData,
+    onSuccess: () => {
+      toast.success('Budget deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['/department/budget'] });
+    },
+    onError: (error) => {
+      console.error('Error deleting todo:', error);
+    }
+  });
 
   const handleEdit = (budget: Budget) => {
     setEditingBudget(budget)
@@ -129,8 +94,7 @@ export default function BudgetsPage() {
   }
 
   const handleDelete = (budget: Budget) => {
-    // In a real app, this would make an API call
-    console.log('Delete budget:', budget)
+    deleteMutation.mutate(`/department/budget/${budget?._id}`)
   }
 
   return (
@@ -146,7 +110,7 @@ export default function BudgetsPage() {
 
       <DataTable
         columns={columns}
-        data={mockBudgets}
+        url="/department/budget"
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
@@ -161,12 +125,7 @@ export default function BudgetsPage() {
       >
         <BudgetForm
           budget={editingBudget}
-          onSubmit={(data) => {
-            // In a real app, this would make an API call
-            console.log('Form submitted:', data)
-            setIsModalOpen(false)
-            setEditingBudget(null)
-          }}
+          setIsModalOpen={setIsModalOpen}
         />
       </Modal>
     </div>

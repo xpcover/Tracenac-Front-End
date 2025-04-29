@@ -3,27 +3,33 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
+import { Budget } from '@/lib/types'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { dataTableService } from '@/services/dataTable.service'
+import toast from 'react-hot-toast'
 
 const budgetSchema = z.object({
-  asset_id: z.string().min(1, 'Asset ID is required'),
+  assetId: z.string().min(1, 'Asset ID is required'),
   fiscal_year: z.string().min(1, 'Fiscal year is required'),
-  budget_amount: z.number().min(0, 'Budget amount must be positive'),
-  actual_amount: z.number().min(0, 'Actual amount must be positive'),
+  budget_amount: z.preprocess(
+    (val) => Number(val),
+    z.number().min(0, 'Budget amount must be positive')
+  ),  
+  actual_amount: z.preprocess(
+    (val) => Number(val),
+    z.number().min(0, 'Actual amount must be positive')
+  ),
+  createdBy: z.string().min(1, 'CreatedBy is required'),
 })
 
 type BudgetFormData = z.infer<typeof budgetSchema>
 
 interface BudgetFormProps {
-  budget?: {
-    asset_id: string
-    fiscal_year: string
-    budget_amount: number
-    actual_amount: number
-  } | null
-  onSubmit: (data: BudgetFormData) => void
+  budget?: Budget | null
+  setIsModalOpen: (arg: boolean) => void
 }
 
-export default function BudgetForm({ budget, onSubmit }: BudgetFormProps) {
+export default function BudgetForm({ budget, setIsModalOpen }: BudgetFormProps) {
   const {
     register,
     handleSubmit,
@@ -31,12 +37,51 @@ export default function BudgetForm({ budget, onSubmit }: BudgetFormProps) {
   } = useForm<BudgetFormData>({
     resolver: zodResolver(budgetSchema),
     defaultValues: {
-      asset_id: budget?.asset_id || '',
+      assetId: budget?.assetId || '',
       fiscal_year: budget?.fiscal_year || new Date().getFullYear().toString(),
-      budget_amount: budget?.budget_amount || 0,
-      actual_amount: budget?.actual_amount || 0,
+      budget_amount: budget?.budget_amount || 0, // convert number to string
+      actual_amount: budget?.actual_amount || 0, // convert number to string
+      createdBy: budget?.createdBy || localStorage.getItem('userId') || '',
     },
   })
+
+  const queryClient = useQueryClient();
+
+  const createDataMutation = useMutation({
+    mutationFn: data => dataTableService.createData("/department/budget/", data),
+    onSuccess:()=>{
+      toast.success("Budget added Successfully");
+      queryClient.invalidateQueries({ queryKey: ['/department/budget']});
+      setIsModalOpen(false)
+    },
+    onError:()=>{
+      toast.error("Failed to add department")
+    },
+  })
+
+
+  const updateDataMutation = useMutation({
+    mutationFn: data =>  dataTableService.updateData(`/department/budget/${budget?._id}`, data),
+    onSuccess: () => {
+      toast.success('Department Update successfully');
+      queryClient.invalidateQueries({ queryKey: ['/department/departments'] });
+      setIsModalOpen(false)
+    },
+
+    onError: () => {
+      toast.error('Failed to update asset block');
+    },
+  })
+
+
+
+  const onSubmit = async(data:Budget)=>{
+    if(budget){
+      updateDataMutation.mutate(data)
+    }else{
+      createDataMutation.mutate(data)
+    }
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -45,9 +90,9 @@ export default function BudgetForm({ budget, onSubmit }: BudgetFormProps) {
           <label className="block text-sm font-medium text-gray-700">
             Asset ID
           </label>
-          <Input {...register('asset_id')} className="mt-1" />
-          {errors.asset_id && (
-            <p className="mt-1 text-sm text-red-600">{errors.asset_id.message}</p>
+          <Input {...register('assetId')} className="mt-1" />
+          {errors.assetId && (
+            <p className="mt-1 text-sm text-red-600">{errors.assetId.message}</p>
           )}
         </div>
         <div>

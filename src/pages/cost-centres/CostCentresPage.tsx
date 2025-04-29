@@ -6,15 +6,14 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { Modal } from '@/components/ui/Modal'
 import { CostCentre } from '@/lib/types'
 import CostCentreForm from './CostCentreForm'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { dataTableService } from '@/services/dataTable.service'
+import toast from 'react-hot-toast'
 
 const columnHelper = createColumnHelper<CostCentre>()
 
 const columns = [
-  columnHelper.accessor('cost_centre_id', {
-    header: 'Cost Centre ID',
-    cell: (info) => info.getValue(),
-  }),
-  columnHelper.accessor('cost_centre_name', {
+  columnHelper.accessor('costCentreName', {
     header: 'Name',
     cell: (info) => info.getValue(),
   }),
@@ -32,40 +31,34 @@ const columns = [
   }),
 ]
 
-// Mock data - In a real app, this would come from an API
-const mockCostCentres: CostCentre[] = [
-  {
-    cost_centre_id: '1',
-    tenant_id: '1',
-    cost_centre_name: 'IT Operations',
-    description: 'Information Technology operational expenses',
-    created_at: '2024-03-10T10:00:00Z',
-    updated_at: '2024-03-10T10:00:00Z',
-  },
-  {
-    cost_centre_id: '2',
-    tenant_id: '1',
-    cost_centre_name: 'Manufacturing',
-    description: 'Manufacturing and production costs',
-    created_at: '2024-03-09T15:30:00Z',
-    updated_at: '2024-03-10T09:15:00Z',
-  },
-]
+
 
 export default function CostCentresPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingCostCentre, setEditingCostCentre] = useState<CostCentre | null>(null)
+
+  const queryClient = useQueryClient();
 
   const handleEdit = (costCentre: CostCentre) => {
     setEditingCostCentre(costCentre)
     setIsModalOpen(true)
   }
 
-  const handleDelete = (costCentre: CostCentre) => {
-    // In a real app, this would make an API call
-    console.log('Delete cost centre:', costCentre)
-  }
+  const deleteMutation = useMutation({
+    mutationFn: dataTableService.deleteData,
+    onSuccess: () => {
+      toast.success('Cost Center deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['/department/cost-center'] });
+    },
+    onError: (error) => {
+      console.error('Error deleting todo:', error);
+    }
+  });
 
+  const handleDelete = (costCenter: CostCentre) => {
+    deleteMutation.mutate(`/department/cost-center/${costCenter?._id}`)
+  }
+  
   return (
     <div>
       <PageHeader
@@ -79,11 +72,10 @@ export default function CostCentresPage() {
 
       <DataTable
         columns={columns}
-        data={mockCostCentres}
+        url="/department/cost-center"
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
-
       <Modal
         isOpen={isModalOpen}
         onClose={() => {
@@ -94,12 +86,7 @@ export default function CostCentresPage() {
       >
         <CostCentreForm
           costCentre={editingCostCentre}
-          onSubmit={(data) => {
-            // In a real app, this would make an API call
-            console.log('Form submitted:', data)
-            setIsModalOpen(false)
-            setEditingCostCentre(null)
-          }}
+          setIsModalOpen={setIsModalOpen}
         />
       </Modal>
     </div>

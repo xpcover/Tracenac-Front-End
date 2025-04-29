@@ -41,24 +41,21 @@ export interface User {
   tenant_id: string
   name: string
   phone: string
-
+  userRole:string
   username: string
   password: string
   first_name: string
   last_name: string
   email: string
   is_active: boolean
-  created_at: string
-  updated_at: string
+  createdAt: string
 }
 
 export interface Role {
-  role_id: string
-  tenant_id: string
-  role_name: string
+  name: string
   description: string
-  created_at: string
-  updated_at: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface Permission {
@@ -101,14 +98,26 @@ export interface Location {
   address: string
   latitude: number
   longitude: number
-  created_at: string
-  updated_at: string
+  createdAt: string
+  updatedAt: string
 }
 
-export interface CostCentre {
-  cost_centre_id: string
+export interface Budget {
+  budget_id: string
   tenant_id: string
-  cost_centre_name: string
+  assetId: string
+  fiscal_year: string
+  budget_amount: string
+  actual_amount: string
+  variance: number
+  createdAt: string
+  createdBy: string
+}
+
+
+export interface CostCentre {
+  tenant_id: string
+  costCentreName: string
   description: string
   created_at: string
   updated_at: string

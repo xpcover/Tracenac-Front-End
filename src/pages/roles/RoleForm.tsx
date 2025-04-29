@@ -4,9 +4,12 @@ import { z } from 'zod'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { Role } from '@/lib/types'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { dataTableService } from '@/services/dataTable.service'
+import toast from 'react-hot-toast'
 
 const roleSchema = z.object({
-  role_name: z.string().min(1, 'Role name is required'),
+  name: z.string().min(1, 'Role name is required'),
   description: z.string().min(1, 'Description is required'),
 })
 
@@ -14,10 +17,10 @@ type RoleFormData = z.infer<typeof roleSchema>
 
 interface RoleFormProps {
   role?: Role | null
-  onSubmit: (data: RoleFormData) => void
+  setIsModalOpen: (arg: boolean) => void
 }
 
-export default function RoleForm({ role, onSubmit }: RoleFormProps) {
+export default function RoleForm({ role, setIsModalOpen }: RoleFormProps) {
   const {
     register,
     handleSubmit,
@@ -25,20 +28,59 @@ export default function RoleForm({ role, onSubmit }: RoleFormProps) {
   } = useForm<RoleFormData>({
     resolver: zodResolver(roleSchema),
     defaultValues: {
-      role_name: role?.role_name || '',
+      name: role?.name || '',
       description: role?.description || '',
     },
   })
 
+  const queryClient = useQueryClient();
+
+  const createDataMutation = useMutation({
+    mutationFn: data => dataTableService.createData("/tenant/roles/", data),
+    onSuccess:()=>{
+      toast.success("Role added Successfully");
+      queryClient.invalidateQueries({ queryKey: ['/tenant/roles']});
+      setIsModalOpen(false)
+    },
+    onError:()=>{
+      toast.error("Failed to add Role")
+    },
+  })
+
+
+  const updateDataMutation = useMutation({
+    mutationFn: data =>  dataTableService.updateData(`/tenant/role-edit/${role?._id}`, data),
+    onSuccess: () => {
+      toast.success('Department Update successfully');
+      queryClient.invalidateQueries({ queryKey: ['/tenant/role-edit'] });
+      setIsModalOpen(false)
+    },
+
+    onError: () => {
+      toast.error('Failed to update asset block');
+    },
+  })
+
+
+
+  const onSubmit = async(data:Role)=>{
+    if(role){
+      updateDataMutation.mutate(data)
+    }else{
+      createDataMutation.mutate(data)
+    }
+  }
+
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
-        <label htmlFor="role_name" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="name" className="block text-sm font-medium text-gray-700">
           Role Name
         </label>
-        <Input id="role_name" {...register('role_name')} className="mt-1" />
-        {errors.role_name && (
-          <p className="mt-1 text-sm text-red-600">{errors.role_name.message}</p>
+        <Input id="name" {...register('name')} className="mt-1" />
+        {errors.name && (
+          <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
         )}
       </div>
 

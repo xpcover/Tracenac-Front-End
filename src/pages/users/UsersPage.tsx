@@ -6,15 +6,14 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { Modal } from '@/components/ui/Modal'
 import { User } from '@/lib/types'
 import UserForm from './UserForm'
-import axios from 'axios'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { dataTableService } from '@/services/dataTable.service'
+import toast from 'react-hot-toast'
+import { axiosInstance } from '@/config/axiosInstance'
 
 const columnHelper = createColumnHelper<User>()
 
 const columns = [
-  columnHelper.accessor('id', {
-    header: 'User ID',
-    cell: (info) => info.getValue() || 'N/A',
-  }),
   columnHelper.accessor('name', {
     header: 'Username',
     cell: (info) => info.getValue() || 'N/A',
@@ -23,51 +22,37 @@ const columns = [
     header: 'Phone',
     cell: (info) => info.getValue() || 'N/A',
   }),
- 
   columnHelper.accessor('email', {
     header: 'Email',
     cell: (info) => info.getValue() || 'N/A',
   }),
 
-  columnHelper.accessor('created_at', {
+  columnHelper.accessor('createdAt', {
     header: 'Created At',
     cell: (info) => format(new Date(info.getValue()), 'PPp'),
   }),
 ]
 
 export default function UsersPage() {
+    const [roles, setRoles] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
-  const [users, setUsers] = useState<User[]>([])
+  
+  // const [users, setUsers] = useState<User[]>([])
+  // console.log("Editing",editingUser)
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      const token = localStorage.getItem('token')
-      if (!token) {
-        console.error('No token found')
-        return
-      }
+  const queryClient = useQueryClient();
 
-      try {
-        const response = await axios.get('https://api.tracenac.com/api/user/', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        })
-
-        if (response.status !== 200) {
-          throw new Error('Failed to fetch users')
-        }
-
-        const data = await response.data
-        setUsers(data.msg) // Assuming the API response is an array of users
-      } catch (error) {
-        console.error('Error fetching users:', error)
-      }
+  const deleteMutation = useMutation({
+    mutationFn: dataTableService.deleteData,
+    onSuccess: () => {
+      toast.success('User deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['/user'] });
+    },
+    onError: (error) => {
+      console.error('Error deleting todo:', error);
     }
-
-    fetchUsers()
-  }, [])
+  });
 
   const handleEdit = (user: User) => {
     setEditingUser(user)
@@ -75,9 +60,22 @@ export default function UsersPage() {
   }
 
   const handleDelete = (user: User) => {
-    // In a real app, this would make an API call
-    console.log('Delete user:', user)
+    deleteMutation.mutate(`/user${user?._id}`)
   }
+
+  const fetchRole = async () => {
+    try {
+      const response = await axiosInstance.get("/tenant/roles/");
+      setRoles(response.data.msg);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  useEffect(()=>{
+    fetchRole()
+  },[])
+
 
   return (
     <div>
@@ -92,11 +90,12 @@ export default function UsersPage() {
 
       <DataTable
         columns={columns}
-        data={users}
+        url="/user"
         onEdit={handleEdit}
         onDelete={handleDelete}
-      />
+       />
 
+      {/* Handling Toggle */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => {
@@ -105,14 +104,12 @@ export default function UsersPage() {
         }}
         title={editingUser ? 'Edit User' : 'Add Employee'}
       >
+
+        {/* Handling User Submission */}
         <UserForm
+          roles={roles}
           user={editingUser}
-          onSubmit={(data) => {
-            // In a real app, this would make an API call
-            console.log('Form submitted:', data)
-            setIsModalOpen(false)
-            setEditingUser(null)
-          }}
+          setIsModalOpen={setIsModalOpen}
         />
       </Modal>
     </div>

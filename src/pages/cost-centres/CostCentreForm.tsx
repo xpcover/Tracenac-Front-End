@@ -4,9 +4,12 @@ import { z } from 'zod'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { CostCentre } from '@/lib/types'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { dataTableService } from '@/services/dataTable.service'
+import toast from 'react-hot-toast'
 
 const costCentreSchema = z.object({
-  cost_centre_name: z.string().min(1, 'Cost centre name is required'),
+  costCentreName: z.string().min(1, 'Cost centre name is required'),
   description: z.string().min(1, 'Description is required'),
 })
 
@@ -14,12 +17,12 @@ type CostCentreFormData = z.infer<typeof costCentreSchema>
 
 interface CostCentreFormProps {
   costCentre?: CostCentre | null
-  onSubmit: (data: CostCentreFormData) => void
+  setIsModalOpen: (arg: boolean) => void
 }
 
 export default function CostCentreForm({
   costCentre,
-  onSubmit,
+  setIsModalOpen,
 }: CostCentreFormProps) {
   const {
     register,
@@ -28,29 +31,68 @@ export default function CostCentreForm({
   } = useForm<CostCentreFormData>({
     resolver: zodResolver(costCentreSchema),
     defaultValues: {
-      cost_centre_name: costCentre?.cost_centre_name || '',
+      costCentreName: costCentre?.costCentreName || '',
       description: costCentre?.description || '',
     },
   })
+
+  const queryClient = useQueryClient();
+
+  const createDataMutation = useMutation({
+    mutationFn: data => dataTableService.createData("/department/cost-center/", data),
+    onSuccess:()=>{
+      toast.success("Cost Center added Successfully");
+      queryClient.invalidateQueries({ queryKey: ['/department/cost-center']});
+      setIsModalOpen(false)
+    },
+    onError:()=>{
+      toast.error("Failed to add department")
+    },
+  })
+
+  console.log("CostCenter", costCentre)
+  const updateDataMutation = useMutation({
+    mutationFn: data =>  dataTableService.updateData(`/department/cost-center/${costCentre?._id}`, data),
+    onSuccess: () => {
+      toast.success('Cost Center Update successfully');
+      queryClient.invalidateQueries({ queryKey: ['/department/cost-center'] });
+      setIsModalOpen(false)
+    },
+
+    onError: () => {
+      toast.error('Failed to update CostCenter');
+    },
+  })
+
+
+    const onSubmit = async(data:CostCentre)=>{
+      if(costCentre){
+        console.log(data)
+        updateDataMutation.mutate(data)
+      }else{
+        createDataMutation.mutate(data)
+      }
+    }
+  
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
         <label
-          htmlFor="cost_centre_name"
+          htmlFor="costCentreName"
           className="block text-sm font-medium text-gray-700"
         >
           Cost Centre Name
         </label>
         <Input
-          id="cost_centre_name"
-          {...register('cost_centre_name')}
+          id="costCentreName"
+          {...register('costCentreName')}
           className="mt-1"
           placeholder="e.g., IT Operations"
         />
-        {errors.cost_centre_name && (
+        {errors.costCentreName && (
           <p className="mt-1 text-sm text-red-600">
-            {errors.cost_centre_name.message}
+            {errors.costCentreName.message}
           </p>
         )}
       </div>

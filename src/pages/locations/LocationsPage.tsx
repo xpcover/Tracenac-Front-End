@@ -6,14 +6,13 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { Modal } from '@/components/ui/Modal'
 import { Location } from '@/lib/types'
 import LocationForm from './LocationForm'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { dataTableService } from '@/services/dataTable.service'
+import toast from 'react-hot-toast'
 
 const columnHelper = createColumnHelper<Location>()
 
 const columns = [
-  columnHelper.accessor('location_id', {
-    header: 'Location ID',
-    cell: (info) => info.getValue(),
-  }),
   columnHelper.accessor('location_name', {
     header: 'Name',
     cell: (info) => info.getValue(),
@@ -30,53 +29,45 @@ const columns = [
     header: 'Longitude',
     cell: (info) => info.getValue(),
   }),
-  columnHelper.accessor('created_at', {
+  columnHelper.accessor('createdAt', {
     header: 'Created At',
     cell: (info) => format(new Date(info.getValue()), 'PPp'),
   }),
-  columnHelper.accessor('updated_at', {
+  columnHelper.accessor('updatedAt', {
     header: 'Updated At',
     cell: (info) => format(new Date(info.getValue()), 'PPp'),
   }),
 ]
 
 // Mock data - In a real app, this would come from an API
-const mockLocations: Location[] = [
-  {
-    location_id: '1',
-    tenant_id: '1',
-    location_name: 'Main Office',
-    address: '123 Business St, City, Country',
-    latitude: 40.7128,
-    longitude: -74.0060,
-    created_at: '2024-03-10T10:00:00Z',
-    updated_at: '2024-03-10T10:00:00Z',
-  },
-  {
-    location_id: '2',
-    tenant_id: '1',
-    location_name: 'Warehouse',
-    address: '456 Industrial Ave, City, Country',
-    latitude: 40.7589,
-    longitude: -73.9851,
-    created_at: '2024-03-09T15:30:00Z',
-    updated_at: '2024-03-10T09:15:00Z',
-  },
-]
 
 export default function LocationsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingLocation, setEditingLocation] = useState<Location | null>(null)
 
-  const handleEdit = (location: Location) => {
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: dataTableService.deleteData,
+    onSuccess: () => {
+      toast.success('Department deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['/department/location'] });
+    },
+    onError: (error) => {
+      console.error('Error deleting todo:', error);
+    }
+  });
+
+
+  const handleEdit = (location:Location) => {
     setEditingLocation(location)
     setIsModalOpen(true)
   }
 
   const handleDelete = (location: Location) => {
-    // In a real app, this would make an API call
-    console.log('Delete location:', location)
+    deleteMutation.mutate(`/department/location/${location?._id}`)
   }
+
 
   return (
     <div>
@@ -91,7 +82,7 @@ export default function LocationsPage() {
 
       <DataTable
         columns={columns}
-        data={mockLocations}
+        url="/department/location"
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
@@ -104,14 +95,10 @@ export default function LocationsPage() {
         }}
         title={editingLocation ? 'Edit Location' : 'Add Location'}
       >
+        
         <LocationForm
           location={editingLocation}
-          onSubmit={(data) => {
-            // In a real app, this would make an API call
-            console.log('Form submitted:', data)
-            setIsModalOpen(false)
-            setEditingLocation(null)
-          }}
+          setIsModalOpen={setIsModalOpen}
         />
       </Modal>
     </div>

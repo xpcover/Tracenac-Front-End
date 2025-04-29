@@ -38,8 +38,8 @@ import ReportTemplateList from './pages/reports/templates/ReportTemplateList';
 import ShortUrlsPage from './pages/short-urls/ShortUrlsPage';
 import CreateShortUrlPage from './pages/short-urls/CreateShortUrlPage';
 import BulkCreateUrlPage from './pages/short-urls/BulkCreateUrlPage';
-import PartnersPage from './pages/partner/PartnerForm';
-import PartnerList from './pages/partner/PartnerList';
+// import PartnersPage from './pages/partner/PartnerForm';
+import PartnerList from './pages/partner/PartnerPage';
 // Create Reports Pages
 import CreateAssetHistoryPage from './pages/create-reports/CreateAssetHistoryPage';
 import CreateBarcodeScanPage from './pages/create-reports/CreateBarcodeScanPage';
@@ -80,7 +80,7 @@ function App() {
           <Route path="profile" element={<ProfilePage />} />
           
           {/* Main Menu Routes */}
-          <Route path="partner" element={<PartnersPage />} />
+          {/* <Route path="partner" element={<PartnersPage />} /> */}
           <Route path="partner-list" element={<PartnerList />} />
 
           <Route path="tenants" element={<TenantsPage />} />
