@@ -38,7 +38,6 @@ export default function AssetComponentForm({
     resolver: zodResolver(assetComponentSchema),
     defaultValues: {
       assetId: component?.assetId || '',
-      // tenant_id: localStorage.getItem('tenantId')?.toString() || '',
       parent_component_id: component?.parent_component_id || null,
       component_name: component?.component_name || '',
       component_type: component?.component_type || '',

@@ -33,14 +33,14 @@ const columns = [
       </div>
     ),
   }),
-  columnHelper.accessor('asset_code', {
+  columnHelper.accessor('assetCode', {
     header: 'Asset Code',
     cell: (info) => (
       <button
-        // onClick={() => info.table.options.meta?.onAssetClick?.(info.row.original)}
+        onClick={() => info.table.options.meta?.onAssetClick?.(info.row.original)}
         className="text-blue-600 hover:underline font-medium"
       >
-        {/* {info.getValue()} */}
+        {info.getValue()}
       </button>
     ),
   }),
@@ -48,7 +48,7 @@ const columns = [
     header: 'Name',
     cell: (info) => info.getValue(),
   }),
-  columnHelper.accessor('asset_type', {
+  columnHelper.accessor('assetType', {
     header: 'Type',
     cell: (info) => info.getValue(),
   }),
@@ -69,31 +69,23 @@ const columns = [
       </span>
     ),
   }),
-  columnHelper.accessor('purchase_date', {
+  columnHelper.accessor('purchaseDate', {
     header: 'Purchase Date',
-    cell: (info) => format(new Date(), 'PP'),
+    cell: (info) => format(new Date(info.getValue()), 'PP'),
   }),
-  columnHelper.accessor('purchase_cost', {
+  columnHelper.accessor('purchaseCost', {
     header: 'Purchase Cost',
     cell: (info) => (
       <span className="font-mono">
-        {/* {info.row.original.purchase_currency}{' '}
-        {info.getValue().toLocaleString(undefined, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })} */}
+        {info.getValue()["$numberDecimal"]}
       </span>
     ),
   }),
-  columnHelper.accessor('current_value', {
-    header: 'Current Value',
+  columnHelper.accessor('impairmentValue', {
+    header: 'Impairment Value',
     cell: (info) => (
       <span className="font-mono">
-        {/* {info.row.original.purchase_currency}{' '}
-        {info.getValue().toLocaleString(undefined, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })} */}
+        {info.getValue()["$numberDecimal"]}
       </span>
     ),
   }),
@@ -118,12 +110,13 @@ export default function AssetsPage() {
       queryClient.invalidateQueries({ queryKey: ['/assets'] });
     },
     onError: (error) => {
+      toast.error('Failed to delete asset');
       console.error('Error deleting asset:', error);
     }
   });
   
   const handleDelete = (asset: Asset) => {
-    console.log('Delete asset:', asset)
+    deleteMutation.mutate(`/assets/${asset?._id}`)
   }
 
   
@@ -162,7 +155,7 @@ export default function AssetsPage() {
         onEdit={(asset) => navigate(`/assets/edit/${asset?._id}`)}
         onDelete={handleDelete}
         showDateFilter
-        additionalFilters={additionalFilters}
+        // additionalFilters={additionalFilters}
         meta={{
           onAssetClick: handleAssetClick,
         }}

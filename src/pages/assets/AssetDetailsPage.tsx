@@ -59,6 +59,7 @@ export default function AssetDetailsPage() {
   const { id } = useParams<{ id: string }>()
   const [activeTab, setActiveTab] = useState<typeof TABS[number]['id']>('details')
 
+  
   return (
     <div className="space-y-6">
       <PageHeader

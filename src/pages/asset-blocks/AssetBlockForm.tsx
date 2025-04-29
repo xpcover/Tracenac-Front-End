@@ -20,12 +20,12 @@ type BlockFormData = z.infer<typeof blockSchema>
 
 interface AssetBlockFormProps {
   block?: AssetBlock | null
-  setEditingBlock: (arg: boolean) => void
+  setIsModalOpen: (arg: boolean) => void
 }
 
 export default function AssetBlockForm({
   block,
-  setEditingBlock,
+  setIsModalOpen,
 }: AssetBlockFormProps) {
   const {
     register,
@@ -49,7 +49,7 @@ export default function AssetBlockForm({
     onSuccess: () => {
       toast.success('Asset Block added successfully');
       queryClient.invalidateQueries({ queryKey: ['/assets/block'] });
-      setEditingBlock(false)
+      setIsModalOpen(false)
     },
     onError: () => {
       toast.error('Failed to add asset block');
@@ -61,7 +61,7 @@ export default function AssetBlockForm({
     onSuccess: () => {
       toast.success('Asset Block updated successfully');
       queryClient.invalidateQueries({ queryKey: ['/assets/block'] });
-      setEditingBlock(false)
+      setIsModalOpen(false)
     },
 
     onError: () => {

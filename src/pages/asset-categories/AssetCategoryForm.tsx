@@ -54,6 +54,7 @@ export default function AssetCategoryForm({
     mutationFn: (data) => dataTableService.updateData(`/category/${category?._id}`, data),
     onSuccess: () => {
       setIsModalOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['/category'] });
       toast.success("Category updated successfully");
     },
     onError: () => {
@@ -62,6 +63,7 @@ export default function AssetCategoryForm({
   })
 
   const onSubmit = (data: CategoryFormData) => {
+    
     if (category) {
       updateData.mutate(data)
     }else{

@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
-import axios from 'axios'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQueries, useQuery } from '@tanstack/react-query'
 import { dataTableService } from '@/services/dataTable.service'
 import toast from 'react-hot-toast'
@@ -15,31 +14,32 @@ const ASSET_STATUSES = ['Active', 'Sold', 'Discarded', 'Relocated']
 
 type AssetFormData = {
   assetId?: number
-  asset_code: string
+  assetCode: string
   assetName: string
-  asset_type: string
-  category_id: string
+  assetType: string
+  categoryId: string
   block_id: string
-  department_id: string
-  location_id: string
-  cost_centre_id: string
-  purchase_date: string
-  purchase_cost: number
+  departmentId: string
+  locationId: string
+  costCentreId: string
+  purchaseDate: string
+  purchaseCost: number
   purchase_currency: string
   exchange_rate: number
   current_value: number
-  depreciation_method: string
-  depreciation_rate: number
-  useful_life: number
-  salvage_value: number
+  depreciationMethod: string
+  depreciationRate: number
+  usefulLife: number
+  salvageValue: number
   lease_end_date: string | null
-  warranty_end_date: string
-  insurance_end_date: string
-  amc_end_date: string
-  market_valuation: number
+  warrantyEndDate: string
+  insuranceEndDate: string
+  amcEndDate: string
+  marketValuation: number
   status: string
-  barcode: string
-  impairment_value: number
+  barcodeLink: string
+  shiftUsageDetails: object,
+  impairmentValue: number
   notes: string
 }
 
@@ -78,6 +78,8 @@ export default function AddEditAssetPage() {
     },
   })
 
+  const navigate = useNavigate()
+
   useEffect(() => {
     if (asset) {
         reset(asset)
@@ -88,6 +90,7 @@ export default function AddEditAssetPage() {
     mutationFn: data => dataTableService.createData('/assets', data),
     onSuccess: () => {
       toast.success("Asset added successfully");
+      navigate('/assets')
     },
     onError: () => {
       toast.error("Failed to add asset");
@@ -97,6 +100,7 @@ export default function AddEditAssetPage() {
   const updateData = useMutation({
     mutationFn: (data) => dataTableService.updateData(`/assets/${id}`, data),
     onSuccess: () => {
+      navigate('/assets')
       toast.success("Asset updated successfully");
     },
     onError: () => {
@@ -117,8 +121,6 @@ export default function AddEditAssetPage() {
     return <div>Loading...</div>
   }
 
-  console.log("===>1",asset);
-
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -133,19 +135,19 @@ export default function AddEditAssetPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Asset Name</label>
-            <Input {...register('asset_name', { required: true })} className="mt-1" />
-            {errors.asset_name && <p className="mt-1 text-sm text-red-600">Asset Name is required</p>}
+            <Input {...register('assetName', { required: true })} className="mt-1" />
+            {errors.assetName && <p className="mt-1 text-sm text-red-600">Asset Name is required</p>}
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Asset Code</label>
-            <Input {...register('asset_code')} className="mt-1" />
+            <Input {...register('assetCode')} className="mt-1" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Asset Type</label>
-            <select {...register('asset_type')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+            <select {...register('assetType')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
               <option value="">Select Asset Type</option>
               {ASSET_TYPES.map((type) => (
                 <option key={type} value={type}>
@@ -163,10 +165,10 @@ export default function AddEditAssetPage() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Category</label>
-            <select {...register('category_id')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+            <select {...register('categoryId')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
               <option value="">Select Category</option>
               {categories?.data?.length > 0 && categories?.data.map((category: any) => (
-                <option key={category?.category_id} value={category?.category_id}>
+                <option key={category?._id} value={category?._id}>
                   {category?.category_name}
                 </option>
               ))}
@@ -174,7 +176,7 @@ export default function AddEditAssetPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Block</label>
-            <select {...register('block_id')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+            <select {...register('blockId')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
               <option value="">Select Block</option>
               {blocks?.data?.length > 0 && blocks?.data.map((block: any) => (
                 <option key={block?._id} value={block?._id}>
@@ -188,7 +190,7 @@ export default function AddEditAssetPage() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Department</label>
-            <select {...register('department_id')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+            <select {...register('departmentId')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
               <option value="">Select Department</option>
               {departments?.data?.length > 0 && departments?.data.map((department: any) => (
                 <option key={department?._id} value={department?._id}>
@@ -199,7 +201,7 @@ export default function AddEditAssetPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Location</label>
-            <select {...register('location_id')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+            <select {...register('locationId')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
               <option value="">Select Location</option>
               {locations?.data?.length > 0 && locations?.data.map((location: any) => (
                 <option key={location?._id} value={location?._id}>
@@ -213,7 +215,7 @@ export default function AddEditAssetPage() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Cost Centre</label>
-            <select {...register('cost_centre_id')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+            <select {...register('costCentreId')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
               <option value="">Select Cost Centre</option>
               {costCentres?.data?.length > 0 && costCentres?.data.map((costCentre: any) => (
                 <option key={costCentre?.id} value={costCentre?._id}>
@@ -235,11 +237,11 @@ export default function AddEditAssetPage() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Purchase Date</label>
-            <Input type="date" {...register('purchase_date')} className="mt-1" />
+            <Input type="date" {...register('purchaseDate')} className="mt-1" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Purchase Cost</label>
-            <Input type="number" step="0.01" {...register('purchase_cost')} className="mt-1" />
+            <Input type="number" step="0.01" {...register('purchaseCost')} className="mt-1" />
           </div>
         </div>
 
@@ -250,7 +252,7 @@ export default function AddEditAssetPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Depreciation Method</label>
-            <select {...register('depreciation_method')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+            <select {...register('depreciationMethod')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
               <option value="">Select Method</option>
               {DEPRECIATION_METHODS.map((method) => (
                 <option key={method} value={method}>
@@ -264,22 +266,22 @@ export default function AddEditAssetPage() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Useful Life (years)</label>
-            <Input type="number" {...register('useful_life')} className="mt-1" />
+            <Input type="number" {...register('usefulLife')} className="mt-1" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Depreciation Rate</label>
-            <Input type="number" step="0.01" {...register('depreciation_rate')} className="mt-1" />
+            <Input type="number" step="0.01" {...register('depreciationRate')} className="mt-1" />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Salvage Value</label>
-            <Input type="number" step="0.01" {...register('salvage_value')} className="mt-1" />
+            <Input type="number" step="0.01" {...register('salvageValue')} className="mt-1" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Current Value</label>
-            <Input type="number" step="0.01" {...register('current_value')} className="mt-1" />
+            <Input type="number" step="0.01" {...register('marketValuation')} className="mt-1" />
           </div>
         </div>
       </div>
@@ -294,18 +296,18 @@ export default function AddEditAssetPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Warranty End Date</label>
-            <Input type="date" {...register('warranty_end_date')} className="mt-1" />
+            <Input type="date" {...register('warrantyEndDate')} className="mt-1" />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Insurance End Date</label>
-            <Input type="date" {...register('insurance_end_date')} className="mt-1" />
+            <Input type="date" {...register('insuranceEndDate')} className="mt-1" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">AMC End Date</label>
-            <Input type="date" {...register('amc_end_date')} className="mt-1" />
+            <Input type="date" {...register('amcEndDate')} className="mt-1" />
           </div>
         </div>
       </div>
@@ -334,11 +336,11 @@ export default function AddEditAssetPage() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Barcode</label>
-            <Input {...register('barcode')} className="mt-1" />
+            <Input {...register('barcodeLink')} className="mt-1" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Impairment Value</label>
-            <Input type="number" step="0.01" {...register('impairment_value')} className="mt-1" />
+            <Input type="number" step="0.01" {...register('impairmentValue')} className="mt-1" />
           </div>
         </div>
 

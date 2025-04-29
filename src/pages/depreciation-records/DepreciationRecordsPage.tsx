@@ -35,11 +35,8 @@ const columns = [
     header: 'Amount',
     cell: (info) => (
       <span className="font-mono">
-        ${' '}
-        {info.getValue().toLocaleString(undefined, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}
+        ${" "}
+        {info.getValue()["$numberDecimal"]}
       </span>
     ),
   }),

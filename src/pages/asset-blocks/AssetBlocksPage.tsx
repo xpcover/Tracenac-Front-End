@@ -89,7 +89,7 @@ export default function AssetBlocksPage() {
       >
         <AssetBlockForm
           block={editingBlock}
-          setEditingBlock={setEditingBlock}
+          setIsModalOpen={setIsModalOpen}
         />
       </Modal>
     </div>
