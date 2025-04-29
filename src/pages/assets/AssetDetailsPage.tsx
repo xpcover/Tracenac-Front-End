@@ -3,36 +3,14 @@ import { useParams } from 'react-router-dom'
 import { format } from 'date-fns'
 import { MapPin, Calendar, DollarSign, PenTool as Tool, FileText } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { useQuery } from '@tanstack/react-query'
+import ApiService from '@/services/api.service'
 
 const TABS = [
   { id: 'details', label: 'Details' },
   { id: 'history', label: 'History' },
   { id: 'map', label: 'Location' },
 ] as const
-
-// Mock data for the asset details
-const mockAsset = {
-  id: 'LAP001',
-  name: 'MacBook Pro 16"',
-  code: 'LAP001',
-  type: 'Laptop',
-  status: 'active',
-  category: 'IT Equipment',
-  location: 'IT Department',
-  purchaseDate: '2024-01-15',
-  purchaseCost: 2499.99,
-  currentValue: 2249.99,
-  currency: 'USD',
-  warrantyEnd: '2025-01-15',
-  maintenanceSchedule: 'Quarterly',
-  lastMaintenance: '2024-03-01',
-  nextMaintenance: '2024-06-01',
-  notes: 'Developer laptop with extended warranty',
-  image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca4?w=800&h=600&fit=crop',
-  latitude: 40.7128,
-  longitude: -74.006,
-  address: '123 Business St, NY',
-}
 
 // Mock data for asset history
 const mockHistory = [
@@ -59,12 +37,22 @@ export default function AssetDetailsPage() {
   const { id } = useParams<{ id: string }>()
   const [activeTab, setActiveTab] = useState<typeof TABS[number]['id']>('details')
 
+  const {data, isLoading} = useQuery({
+    queryKey: ['asset', id],
+    queryFn: () => ApiService.get(`/assets/${id}`),
+  })
+
+  console.log("===>",data);
   
+if(isLoading){
+  return <h3 className='font-semibold'>Loading...</h3>
+}
+
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`Asset: ${mockAsset.name}`}
-        description={`Asset Code: ${mockAsset.code}`}
+        title={`Asset: ${data?.assetName}`}
+        description={`Asset Code: ${data?.assetCode}`}
       />
 
       <div className="grid grid-cols-3 gap-6">
@@ -101,23 +89,23 @@ export default function AssetDetailsPage() {
                       <dl className="mt-4 space-y-4">
                         <div>
                           <dt className="text-sm font-medium text-gray-500">Type</dt>
-                          <dd className="mt-1">{mockAsset.type}</dd>
+                          <dd className="mt-1">{data?.assetType}</dd>
                         </div>
                         <div>
                           <dt className="text-sm font-medium text-gray-500">Category</dt>
-                          <dd className="mt-1">{mockAsset.category}</dd>
+                          <dd className="mt-1">{data?.categoryId}</dd>
                         </div>
                         <div>
                           <dt className="text-sm font-medium text-gray-500">Status</dt>
                           <dd className="mt-1">
-                            <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-                              {mockAsset.status.charAt(0).toUpperCase() + mockAsset.status.slice(1)}
+                          <span className= {`px-2 py-1 text-xs rounded-full ${data?.status === "Active" ? "bg-green-100 text-green-800" : "bg-green-100 text-green-800"}`}>
+                              {data?.status}
                             </span>
                           </dd>
                         </div>
                         <div>
-                          <dt className="text-sm font-medium text-gray-500">Location</dt>
-                          <dd className="mt-1">{mockAsset.location}</dd>
+                          <dt className="text-sm font-medium text-gray-500">Department</dt>
+                          <dd className="mt-1">{data?.departmentId}</dd>
                         </div>
                       </dl>
                     </div>
@@ -127,56 +115,56 @@ export default function AssetDetailsPage() {
                         <div>
                           <dt className="text-sm font-medium text-gray-500">Purchase Cost</dt>
                           <dd className="mt-1 font-mono">
-                            {mockAsset.currency} {mockAsset.purchaseCost.toLocaleString()}
+                            $ {data?.purchaseCost['$numberDecimal']}
                           </dd>
                         </div>
                         <div>
                           <dt className="text-sm font-medium text-gray-500">Current Value</dt>
                           <dd className="mt-1 font-mono">
-                            {mockAsset.currency} {mockAsset.currentValue.toLocaleString()}
+                          $ {data?.impairmentValue['$numberDecimal']}
                           </dd>
                         </div>
                         <div>
                           <dt className="text-sm font-medium text-gray-500">Purchase Date</dt>
                           <dd className="mt-1">
-                            {format(new Date(mockAsset.purchaseDate), 'PP')}
+                            {format(new Date(data?.purchaseDate), 'PP')}
                           </dd>
                         </div>
                         <div>
                           <dt className="text-sm font-medium text-gray-500">Warranty Until</dt>
                           <dd className="mt-1">
-                            {format(new Date(mockAsset.warrantyEnd), 'PP')}
+                            {format(new Date(data?.warrantyEndDate), 'PP')}
                           </dd>
                         </div>
                       </dl>
                     </div>
                   </div>
 
-                  <div>
+                  {/* <div>
                     <h3 className="text-lg font-medium">Maintenance Schedule</h3>
                     <dl className="mt-4 grid grid-cols-2 gap-4">
                       <div>
                         <dt className="text-sm font-medium text-gray-500">Frequency</dt>
-                        <dd className="mt-1">{mockAsset.maintenanceSchedule}</dd>
+                        <dd className="mt-1">{data.maintenanceSchedule}</dd>
                       </div>
                       <div>
                         <dt className="text-sm font-medium text-gray-500">Last Maintenance</dt>
                         <dd className="mt-1">
-                          {format(new Date(mockAsset.lastMaintenance), 'PP')}
+                          {format(new Date(data.lastMaintenance), 'PP')}
                         </dd>
                       </div>
                       <div>
                         <dt className="text-sm font-medium text-gray-500">Next Maintenance</dt>
                         <dd className="mt-1">
-                          {format(new Date(mockAsset.nextMaintenance), 'PP')}
+                          {format(new Date(data.nextMaintenance), 'PP')}
                         </dd>
                       </div>
                     </dl>
-                  </div>
+                  </div> */}
 
                   <div>
                     <h3 className="text-lg font-medium">Notes</h3>
-                    <p className="mt-2 text-gray-600">{mockAsset.notes}</p>
+                    <p className="mt-2 text-gray-600">{data?.shiftUsageDetails?.notes}</p>
                   </div>
                 </div>
               )}
@@ -225,9 +213,9 @@ export default function AssetDetailsPage() {
                   </div>
                   <div className="bg-white p-4 rounded-lg border space-y-2">
                     <h4 className="font-medium">Current Location</h4>
-                    <p className="text-gray-600">{mockAsset.address}</p>
+                    <p className="text-gray-600">{data?.address}</p>
                     <div className="text-sm text-gray-500">
-                      Coordinates: {mockAsset.latitude}, {mockAsset.longitude}
+                      Coordinates: {data?.location?.latitude}, {data?.location?.longitude}
                     </div>
                   </div>
                 </div>
@@ -241,8 +229,8 @@ export default function AssetDetailsPage() {
           {/* Asset Image */}
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <img
-              src={mockAsset.image}
-              alt={mockAsset.name}
+              src={data?.image}
+              alt={data?.assetName}
               className="w-full h-48 object-cover"
             />
           </div>
@@ -254,7 +242,7 @@ export default function AssetDetailsPage() {
               <div>
                 <p className="text-sm text-gray-500">Purchase Date</p>
                 <p className="font-medium">
-                  {format(new Date(mockAsset.purchaseDate), 'PP')}
+                  {format(new Date(data?.purchaseDate), 'PP')}
                 </p>
               </div>
             </div>
@@ -263,7 +251,7 @@ export default function AssetDetailsPage() {
               <div>
                 <p className="text-sm text-gray-500">Current Value</p>
                 <p className="font-medium">
-                  {mockAsset.currency} {mockAsset.currentValue.toLocaleString()}
+                  $ {data?.impairmentValue['$numberDecimal']}
                 </p>
               </div>
             </div>
@@ -272,7 +260,7 @@ export default function AssetDetailsPage() {
               <div>
                 <p className="text-sm text-gray-500">Next Maintenance</p>
                 <p className="font-medium">
-                  {format(new Date(mockAsset.nextMaintenance), 'PP')}
+                  {data?.nextMaintenance ? format(new Date(data?.nextMaintenance), 'PP') : 'N/A'}
                 </p>
               </div>
             </div>
@@ -280,7 +268,7 @@ export default function AssetDetailsPage() {
               <FileText className="w-5 h-5 text-gray-400" />
               <div>
                 <p className="text-sm text-gray-500">Category</p>
-                <p className="font-medium">{mockAsset.category}</p>
+                <p className="font-medium">{data?.category}</p>
               </div>
             </div>
           </div>

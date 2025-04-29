@@ -121,7 +121,7 @@ export default function AssetsPage() {
 
   
   const handleAssetClick = (asset: Asset) => {
-    navigate(`/assets/${asset?.asset_id}`)
+    navigate(`/assets/${asset?._id}`)
   }
 
   const additionalFilters = (

@@ -61,13 +61,18 @@ export function MenuArrangement() {
 
   const handleSave = () => {
     console.log('Saved JSON:', JSON.stringify(items, null, 2));
-    // Add your save logic here (e.g., send the JSON to a server)
   };
 
   return (
     <div className="flex space-x-4">
       <div className="space-y-4 flex-1">
         <DragDropContext onDragEnd={handleDrop}>
+                <p className="text-sm text-gray-500">Drag and drop items to reorder them.</p>
+              <div className='flex bg-gray-50 p-2 gap-3 rounded-md'>
+                <h3 className='w-[82%]'>Menu Name</h3>
+                <p className='text-sm text-slate-500'>Web</p>
+                <p className='text-sm text-slate-500'>Mobile</p>
+              </div>
           <Droppable droppableId="menu-arrangement">
             {(provided) => (
               <div ref={provided.innerRef} {...provided.droppableProps}>
@@ -75,13 +80,29 @@ export function MenuArrangement() {
                   <Draggable key={item.id} draggableId={item.id} index={index}>
                     {(provided) => (
                       <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className="p-2 bg-gray-50 rounded mb-2">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3 justify-between">
                           <input
                             type="text"
                             value={item.name}
                             onChange={(e) => handleNameChange(item.id, e.target.value)}
                             className="flex-1 border-none focus:ring-0 bg-transparent"
                           />
+                          <Switch
+                            checked={item.showWeb}
+                            onChange={() => toggleVisibility(item.id, 'web')}
+                            className={cn(
+                              item.showWeb ? 'bg-blue-600' : 'bg-gray-200',
+                              'relative inline-flex items-center h-6 rounded-full w-11'
+                            )}
+                          >
+                            <span className="sr-only">Show on Mobile</span>
+                            <span
+                              className={cn(
+                                item.showWeb ? 'translate-x-6' : 'translate-x-1',
+                                'inline-block w-4 h-4 transform bg-white rounded-full'
+                              )}
+                            />
+                          </Switch>
                           <Switch
                             checked={item.showMobile}
                             onChange={() => toggleVisibility(item.id, 'mobile')}
