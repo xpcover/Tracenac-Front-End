@@ -34,6 +34,13 @@ interface SystemGeneratedField {
   fields: string[]
 }
 
+const apiMapping: Record<string, string> = {
+  partners: 'https://api.tracenac.com/api/partner',
+  assets: 'https://api.tracenac.com/api/assets',
+  users: 'https://api.tracenac.com/api/users',
+  // Add more mappings as needed
+}
+
 export function ReasonSetup() {
   const [categories, setCategories] = useState<Category[]>([
     {
@@ -57,6 +64,8 @@ export function ReasonSetup() {
   const [collections, setCollections] = useState<string[]>([])
   const [selectedCollection, setSelectedCollection] = useState<string>('')
   const [selectedCollectionFields, setSelectedCollectionFields] = useState<string[]>([])
+  const [searchResults, setSearchResults] = useState<{ fieldName: string; collection: string }[]>([])
+  const [selectedFields, setSelectedFields] = useState<{ fieldName: string; collection: string }[]>([])
 
   useEffect(() => {
     fetchReportTypes()
@@ -151,20 +160,33 @@ export function ReasonSetup() {
     const tenantId = localStorage.getItem('tenantId')
 
     // Add tenantId and selectedReportType to each category
-    const categoriesWithTenantId = categories.map(category => ({
+    const categoriesWithTenantId = categories.map((category) => ({
       ...category,
       tenantId,
       reportType: selectedReportType,
     }))
-    console.log(selectedReportType)
+
+    // Attach API endpoints to system-generated fields based on the collection
+    const systemGeneratedFieldsWithApi = systemGeneratedFields.map((sysField) => ({
+      ...sysField,
+      apiEndpoint: apiMapping[sysField.collection] || null, // Map the collection to its API endpoint
+    }))
+
     try {
       const response = await fetch('https://api.tracenac.com/api/assets/reasons', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ categories: categoriesWithTenantId, systemGeneratedFields }),
+        body: JSON.stringify({
+          tenantId, 
+          reportType: selectedReportType,
+          name: categoriesWithTenantId[0].name,
+          fields: categoriesWithTenantId[0].fields,
+          // Use the first category for submission
+          systemGeneratedFields: systemGeneratedFieldsWithApi, // Include the API mapping
+        }),
       })
 
       if (!response.ok) {
@@ -235,15 +257,51 @@ export function ReasonSetup() {
       return category
     }))
   }
-
+  const handleSearchFields = async (query: string) => {
+    if (!query) {
+      setSearchResults([])
+      return
+    }
+  
+    const token = localStorage.getItem('token')
+    if (!token) {
+      console.error('No token found')
+      return
+    }
+  
+    try {
+      const response = await fetch(`https://api.tracenac.com/api/assets/search-fields?searchQuery=${query}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+  
+      if (!response.ok) {
+        throw new Error('Failed to fetch search fields')
+      }
+  
+      const data = await response.json()
+      setSearchResults(data)
+    } catch (error) {
+      console.error('Error fetching search fields:', error)
+    }
+  }
+  const handleSelectField = (field: { fieldName: string; collection: string }) => {
+    // Avoid duplicates
+    if (!selectedFields.some(f => f.fieldName === field.fieldName && f.collection === field.collection)) {
+      setSelectedFields([...selectedFields, field])
+    }
+  }
   const handleAddSystemGeneratedField = () => {
-    setSystemGeneratedFields([...systemGeneratedFields, {
-      collection: selectedCollection,
-      fields: selectedCollectionFields,
-    }])
+    const newSystemGeneratedFields = selectedFields.map(field => ({
+      collection: field.collection,
+      fields: [field.fieldName],
+    }))
+  
+    setSystemGeneratedFields([...systemGeneratedFields, ...newSystemGeneratedFields])
     setIsSystemFieldModalOpen(false)
-    setSelectedCollection('')
-    setSelectedCollectionFields([])
+    setSearchResults([])
+    setSelectedFields([])
   }
 
   return (
@@ -374,7 +432,7 @@ export function ReasonSetup() {
                     </Button>
                   </div>
                 )}
-                {field.isDefault && (
+                {!field.isDefault && (
                   <Button
                     variant="ghost"
                     onClick={() => {
@@ -441,18 +499,38 @@ export function ReasonSetup() {
         Submit
       </button>
 
-      <Modal
-        isOpen={showSuccessModal}
-        onClose={() => setShowSuccessModal(false)}
-        title="Success"
-      >
-        <div className="p-4">
-          <p className="mt-2">Category submission successful!</p>
-          <Button onClick={() => setShowSuccessModal(false)} className="mt-4">
-            Close
-          </Button>
-        </div>
-      </Modal>
+      {/* <Modal 
+  isOpen={isSystemFieldModalOpen}
+  onClose={() => setIsSystemFieldModalOpen(false)}
+  title="Add System Generated Field"
+>
+  <div style={{ height: "300px" }} className="p-4 space-y-4">
+    <div>
+      <label className="block text-sm font-medium text-gray-700">Search Field</label>
+      <input
+        type="text"
+        placeholder="Type to search fields..."
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+        onChange={(e) => handleSearchFields(e.target.value)}
+      />
+      <ul className="mt-2 border rounded-md max-h-40 overflow-y-auto">
+        {searchResults.map((result, index) => (
+          <li
+            key={`${result.collection}-${result.fieldName}-${index}`}
+            className="p-2 hover:bg-gray-100 cursor-pointer"
+            onClick={() => handleSelectField(result)}
+          >
+            {result.fieldName} ({result.collection})
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <Button onClick={handleAddSystemGeneratedField} className="mt-4">
+      Save Selected Fields
+    </Button>
+  </div>
+</Modal> */}
 
       <Modal
         isOpen={showFailureModal}
@@ -467,47 +545,38 @@ export function ReasonSetup() {
         </div>
       </Modal>
 
-      <Modal 
-        isOpen={isSystemFieldModalOpen}
-        onClose={() => setIsSystemFieldModalOpen(false)}
-        title="Add System Generated Field"
-      >
-        <div style={{height:"300px"}} className="p-4 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Collection</label>
-            <select
-              value={selectedCollection}
-              onChange={(e) => {
-                setSelectedCollection(e.target.value)
-                fetchCollectionFields(e.target.value)
-              }}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-            >
-              <option value="">Select a collection</option>
-              {collections.map((collection) => (
-                <option key={collection} value={collection}>
-                  {collection}
-                </option>
-              ))}
-            </select>
-          </div>
+     <Modal 
+  isOpen={isSystemFieldModalOpen}
+  onClose={() => setIsSystemFieldModalOpen(false)}
+  title="Add System Generated Field"
+>
+  <div style={{ height: "300px" }} className="p-4 space-y-4">
+    <div>
+      <label className="block text-sm font-medium text-gray-700">Search Field</label>
+      <input
+        type="text"
+        placeholder="Type to search fields..."
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+        onChange={(e) => handleSearchFields(e.target.value)}
+      />
+      <ul className="mt-2 border rounded-md max-h-40 overflow-y-auto">
+        {searchResults.map((result, index) => (
+          <li
+            key={`${result.collection}-${result.fieldName}-${index}`}
+            className="p-2 hover:bg-gray-100 cursor-pointer"
+            onClick={() => handleSelectField(result)}
+          >
+            {result.fieldName} ({result.collection})
+          </li>
+        ))}
+      </ul>
+    </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Fields</label>
-            <Select
-              isMulti
-              value={selectedCollectionFields.map(field => ({ value: field, label: field }))}
-              onChange={(selectedOptions) => setSelectedCollectionFields(selectedOptions.map(option => option.value))}
-              options={availableFields.map(field => ({ value: field, label: field }))}
-              className="mt-1"
-            />
-          </div>
-
-          <Button onClick={handleAddSystemGeneratedField} className="mt-4">
-            Add Fields
-          </Button>
-        </div>
-      </Modal>
+    <Button onClick={handleAddSystemGeneratedField} className="mt-4">
+      Save Selected Fields
+    </Button>
+  </div>
+</Modal>
     </div>
   )
 }

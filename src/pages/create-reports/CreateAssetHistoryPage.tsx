@@ -1,13 +1,11 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, MapPin } from 'lucide-react'
-import { z } from 'zod'
+import { ArrowLeft, Upload, MapPin, FileText } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
-import { axiosInstance } from '@/config/axiosInstance'
+import axios from 'axios'
+import Select from 'react-select'
 
 interface Field {
   id: string
@@ -39,145 +37,216 @@ interface User {
   name: string
 }
 
-const createAssetHistorySchema = z.object({
-  assetId: z.string().min(1, 'Asset ID is required'),
-  reportTemplateId: z.string().min(1, 'Report template is required'),
-  useCurrentLocation: z.boolean().default(false),
-  latitude: z.number().nullable().default(null),
-  longitude: z.number().nullable().default(null),
-  address: z.string().optional(),
-  assignedTo: z.boolean().default(false),
-  userId: z.string().optional(),
-  date: z.string().min(1, 'Date is required'),
-})
-
-type CreateAssetHistoryFormData = z.infer<typeof createAssetHistorySchema> & {
-  dynamicFields: Record<string, any>
-  attachments: File[]
-}
-
 export default function CreateAssetHistoryPage() {
   const navigate = useNavigate()
+  const [files, setFiles] = useState<File[]>([])
+  const [useCurrentLocation, setUseCurrentLocation] = useState(false)
+  const [latitude, setLatitude] = useState<number | null>(null)
+  const [longitude, setLongitude] = useState<number | null>(null)
+  const [assetId, setAssetId] = useState('')
+  const [changeType, setChangeType] = useState('')
+  const [details, setDetails] = useState('')
+  const [date, setDate] = useState('')
+  const [changedBy, setChangedBy] = useState('')
+  const [address, setAddress] = useState('')
+  const [reportTemplates, setReportTemplates] = useState<ReportTemplate[]>([])
+  const [selectedReportTemplate, setSelectedReportTemplate] = useState<string>('')
+  const [reasonFields, setReasonFields] = useState<Field[]>([])
+  const [assignedTo, setAssignedTo] = useState(false)
+  const [users, setUsers] = useState<User[]>([])
+  const [selectedUser, setSelectedUser] = useState<string>('')
+  const [dynamicFieldValues, setDynamicFieldValues] = useState<{ [key: string]: any }>({})
+  const [systemFieldValues, setSystemFieldValues] = useState<{ [key: string]: any }>({})
+  const [systemFieldOptions, setSystemFieldOptions] = useState<{ [key: string]: any[] }>({})
+  const [systemGeneratedFields, setSystemGeneratedFields] = useState<SystemGeneratedField[]>([])
 
-  // React Hook Form setup
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useForm<CreateAssetHistoryFormData>({
-    resolver: zodResolver(createAssetHistorySchema),
-    defaultValues: {
-      useCurrentLocation: false,
-      assignedTo: false,
-      latitude: null,
-      longitude: null,
-      dynamicFields: {},
-    },
-  })
+  useEffect(() => {
+    fetchReportTemplates()
+  }, [])
 
-  // Watch values for conditional rendering
-  const useCurrentLocation = watch('useCurrentLocation')
-  const assignedTo = watch('assignedTo')
-  const reportTemplateId = watch('reportTemplateId')
+  useEffect(() => {
+    if (assignedTo) {
+      fetchUsers()
+    }
+  }, [assignedTo])
 
-  // Fetch report templates with React Query
-  const { data: reportTemplates = [] } = useQuery<ReportTemplate[]>({
-    queryKey: ['reportTemplates'],
-    queryFn: async () => {
-      const response = await axiosInstance.get('/assets/report-template')
-      return response.data
-    },
-  })
+  const fetchReportTemplates = async () => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      console.error('No token found')
+      return
+    }
 
-  // Fetch users with React Query (only when assignedTo is true)
-  const { data: users = [] } = useQuery<User[]>({
-    queryKey: ['users'],
-    queryFn: async () => {
-      const response = await axiosInstance.get('/user/')
-      return response.data.msg
-    },
-    enabled: assignedTo,
-  })
-
-  // Get the selected report template to access its fields
-  const selectedReportTemplate = reportTemplates.find(
-    (rt) => rt._id === reportTemplateId
-  )
-  const reasonFields = selectedReportTemplate?.reason.fields || []
-
-  // Mutation for submitting the form
-  const createAssetHistoryMutation = useMutation({
-    mutationFn: async (data: CreateAssetHistoryFormData) => {
-      const formData = new FormData()
-
-      formData.append('tenantId', localStorage.getItem('tenantId') || '')
-      formData.append('assetId', data.assetId)
-      formData.append('date', data.date)
-      formData.append('reportType', data.reportTemplateId)
-      if (data.address) formData.append('address', data.address)
-      if (data.userId) formData.append('assignedTo', data.userId)
-      if (data.latitude) formData.append('latitude', data.latitude.toString())
-      if (data.longitude) formData.append('longitude', data.longitude.toString())
-
-      // Append dynamic fields
-      reasonFields.forEach((field) => {
-        const value = data.dynamicFields[field.id]
-        if (value !== undefined) {
-          formData.append(`reasonFields[${field.name}]`, value)
-        }
-      })
-
-      // Append files
-      data.attachments?.forEach((file) => {
-        formData.append('attachments', file)
-      })
-
-      return axiosInstance.post('/assets/asset-history', formData, {
+    try {
+      const response = await fetch('https://api.tracenac.com/api/assets/report-template', {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`,
         },
       })
-    },
-    onSuccess: () => {
-      navigate('/asset-history')
-    },
-  })
 
-  const onSubmit = (data: CreateAssetHistoryFormData) => {
-    createAssetHistoryMutation.mutate(data)
-  }
+      if (!response.ok) {
+        throw new Error('Failed to fetch report templates')
+      }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setValue('attachments', Array.from(e.target.files))
+      const data = await response.json()
+      setReportTemplates(data) // Assuming the API response is an array of report templates
+    } catch (error) {
+      console.error('Error fetching report templates:', error)
     }
   }
 
+  const fetchUsers = async () => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      console.error('No token found')
+      return
+    }
+
+    try {
+      const response = await fetch('https://api.tracenac.com/api/user/', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch users')
+      }
+
+      const data = await response.json()
+      setUsers(data.msg) // Assuming the API response is an array of users
+    } catch (error) {
+      console.error('Error fetching users:', error)
+    }
+  }
+
+  const handleReportTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const reportTemplateId = e.target.value
+    setSelectedReportTemplate(reportTemplateId)
+    const reportTemplate = reportTemplates.find(rt => rt._id === reportTemplateId)
+    setReasonFields(reportTemplate ? reportTemplate.reason.fields : [])
+    setSystemGeneratedFields(reportTemplate.reason.systemGeneratedFields)
+
+  }
+
+  const handleSystemFieldSearch = async (collection: string, query: string, apiEndpoint: string) => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      console.error('No token found')
+      return
+    }
+  
+    try {
+      const response = await fetch(`${apiEndpoint}?search=${query}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+  
+      if (!response.ok) {
+        throw new Error('Failed to fetch system field data')
+      }
+  
+      const data = await response.json()
+      setSystemFieldOptions(prevOptions => ({
+        ...prevOptions,
+        [collection]: data.msg.map((item: any) => ({
+          value: item.partnerId || item.assetId || item._id, // Use partnerId or _id as the value
+          label: item.partnerName || item.name, // Use partnerName or name as the label
+          relatedFields: item, // Store the entire object for related fields
+        })),
+      }))
+    } catch (error) {
+      console.error('Error fetching system field data:', error)
+    }
+  }
+  const handleSystemFieldSelect = (collection: string, selectedOption: any) => {
+    if (!selectedOption) return
+  
+    // Update the selected value and related fields
+    setSystemFieldValues(prevValues => ({
+      ...prevValues,
+      [collection]: {
+        ...selectedOption.relatedFields, // Store all related fields
+      },
+    }))
+  }
+
   const handleDynamicFieldChange = (fieldId: string, value: any) => {
-    setValue(`dynamicFields.${fieldId}`, value)
+    setDynamicFieldValues(prevValues => ({
+      ...prevValues,
+      [fieldId]: value,
+    }))
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+  
+    const token = localStorage.getItem('token')
+  
+    const dynamicFields = reasonFields.map(field => ({
+      name: field.name,
+      value: dynamicFieldValues[field.id],
+    }))
+  
+    const systemFields = systemGeneratedFields.map(field => ({
+      collection: field.collection,
+      values: systemFieldValues[field.collection],
+    }))
+  
+    const assetHistory = {
+      tenantId: localStorage.getItem('tenantId'),
+      assetId,
+      date,
+      latitude,
+      longitude,
+      address,
+      reportType: selectedReportTemplate,
+      attachments: files.map(file => file.name), // Assuming file names are used as attachments
+      assignedTo: selectedUser,
+      reasonFields: dynamicFields,
+      systemFields, // Include system-generated fields
+    }
+  
+    axios.post('https://api.tracenac.com/api/assets/create-asset-report', assetHistory, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
+      .then((res: { data: unknown }) => {
+        alert('Asset History created successfully')
+        navigate('/asset-history')
+      })
+      .catch((err: unknown) => console.error(err))
+  }
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setFiles(Array.from(e.target.files))
+    }
   }
 
   const handleGetCurrentLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setValue('latitude', position.coords.latitude)
-          setValue('longitude', position.coords.longitude)
+          setLatitude(position.coords.latitude)
+          setLongitude(position.coords.longitude)
         },
         (error) => {
-          console.error('Error getting location: ', error)
+          console.error("Error getting location: ", error)
         }
       )
     } else {
-      console.error('Geolocation is not supported by this browser.')
+      console.error("Geolocation is not supported by this browser.")
     }
   }
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Create Report" description="Record new report entry">
+      <PageHeader
+        title="Create Report"
+        description="Record new report entry"
+      >
         <Button variant="ghost" onClick={() => navigate('/asset-history')}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Reports
@@ -186,7 +255,7 @@ export default function CreateAssetHistoryPage() {
 
       <div className="max-w-3xl mx-auto">
         <div className="bg-white rounded-lg shadow">
-          <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
+          <form onSubmit={handleSubmit} className="p-6 space-y-6">
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700">
@@ -194,49 +263,39 @@ export default function CreateAssetHistoryPage() {
                 </label>
                 <Input
                   type="text"
+                  required
                   placeholder="Enter Asset ID"
                   className="mt-1"
-                  {...register('assetId')}
-                  error={errors.assetId?.message}
+                  value={assetId}
+                  onChange={(e) => setAssetId(e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Report Template
-                </label>
-                <select
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  {...register('reportTemplateId')}
-                >
-                  <option value="">Select a report template</option>
-                  {reportTemplates.map((template) => (
-                    <option key={template._id} value={template._id}>
-                      {template.name}
-                    </option>
-                  ))}
-                </select>
-                {errors.reportTemplateId && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {errors.reportTemplateId.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div>
               <label className="block text-sm font-medium text-gray-700">
-                Date
+                Report Template
               </label>
-              <Input
-                type="date"
-                className="mt-1"
-                {...register('date')}
-                error={errors.date?.message}
-              />
+              <select
+                required
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                value={selectedReportTemplate}
+                onChange={handleReportTemplateChange}
+              >
+                <option value="">Select a report template</option>
+                {reportTemplates.map(template => (
+                  <option key={template._id} value={template._id}>
+                    {template.name}
+                  </option>
+                ))}
+              </select>
+            </div>
             </div>
 
-            {/* Dynamic fields from selected report template */}
-            {reasonFields.map((field) => (
+
+           
+
+           
+
+            {reasonFields.map(field => (
               <div key={field.id} className="mt-4">
                 <label className="block text-sm font-medium text-gray-700">
                   {field.name}
@@ -246,9 +305,8 @@ export default function CreateAssetHistoryPage() {
                     type="text"
                     className="mt-1"
                     placeholder={`Enter ${field.name}`}
-                    onChange={(e) =>
-                      handleDynamicFieldChange(field.id, e.target.value)
-                    }
+                    value={dynamicFieldValues[field.id] || ''}
+                    onChange={(e) => handleDynamicFieldChange(field.id, e.target.value)}
                   />
                 )}
                 {field.type === 'number' && (
@@ -256,20 +314,17 @@ export default function CreateAssetHistoryPage() {
                     type="number"
                     className="mt-1"
                     placeholder={`Enter ${field.name}`}
-                    onChange={(e) =>
-                      handleDynamicFieldChange(field.id, e.target.value)
-                    }
+                    value={dynamicFieldValues[field.id] || ''}
+                    onChange={(e) => handleDynamicFieldChange(field.id, e.target.value)}
                   />
                 )}
                 {field.type === 'select' && (
                   <select
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    onChange={(e) =>
-                      handleDynamicFieldChange(field.id, e.target.value)
-                    }
+                    value={dynamicFieldValues[field.id] || ''}
+                    onChange={(e) => handleDynamicFieldChange(field.id, e.target.value)}
                   >
-                    <option value="">Select {field.name}</option>
-                    {field.options?.map((option) => (
+                    {field.options?.map(option => (
                       <option key={option} value={option}>
                         {option}
                       </option>
@@ -280,12 +335,7 @@ export default function CreateAssetHistoryPage() {
                   <input
                     type="file"
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    onChange={(e) =>
-                      handleDynamicFieldChange(
-                        field.id,
-                        e.target.files?.[0]
-                      )
-                    }
+                    onChange={(e) => handleDynamicFieldChange(field.id, e.target.files?.[0])}
                   />
                 )}
                 {field.type === 'date' && (
@@ -293,15 +343,72 @@ export default function CreateAssetHistoryPage() {
                     type="date"
                     className="mt-1"
                     placeholder={`Enter ${field.name}`}
-                    onChange={(e) =>
-                      handleDynamicFieldChange(field.id, e.target.value)
-                    }
+                    value={dynamicFieldValues[field.id] || ''}
+                    onChange={(e) => handleDynamicFieldChange(field.id, e.target.value)}
                   />
                 )}
               </div>
             ))}
 
+{systemGeneratedFields.map(field => (
+  <div key={field.collection} className="mt-4">
+    <label className="block text-sm font-medium text-gray-700">{field.collection}</label>
+    {/* Combined search and dropdown using <datalist> */}
+    <input
+      type="text"
+      list={`${field.collection}-options`}
+      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+      placeholder={`Search ${field.fields[0]}`}
+      onChange={(e) => {
+        const selectedValue = e.target.value
+        const selectedOption = systemFieldOptions[field.collection]?.find(
+          option => option.value === selectedValue
+        )
+        handleSystemFieldSelect(field.collection, selectedOption)
+      }}
+      onInput={(e) =>
+        handleSystemFieldSearch(field.collection, e.target.value, field.apiEndpoint)
+      }
+    />
+    <datalist id={`${field.collection}-options`}>
+      {systemFieldOptions[field.collection]?.map(option => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </datalist>
 
+    {/* Render remaining fields */}
+    {field.fields.slice(1).map(subField => (
+      <div key={subField} className="mt-2">
+        <label className="block text-sm font-medium text-gray-700">{subField}</label>
+        <input
+          type="text"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          placeholder={`Enter ${subField}`}
+          value={systemFieldValues[field.collection]?.[subField] || ''}
+          readOnly // Make related fields read-only
+        />
+      </div>
+    ))}
+  </div>
+))}
+
+            <div className="flex items-center gap-2 mb-4">
+              <input
+                type="checkbox"
+                id="use-location"
+                checked={useCurrentLocation}
+                onChange={(e) => setUseCurrentLocation(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <label
+                htmlFor="use-location"
+                className="text-sm font-medium text-gray-700"
+              >
+                Include Location
+              </label>
+            </div>
 
             {useCurrentLocation && (
               <div className="grid grid-cols-2 gap-6">
@@ -313,7 +420,7 @@ export default function CreateAssetHistoryPage() {
                     type="number"
                     step="any"
                     className="mt-1"
-                    {...register('latitude', { valueAsNumber: true })}
+                    value={latitude ?? ''}
                     readOnly
                   />
                 </div>
@@ -325,7 +432,7 @@ export default function CreateAssetHistoryPage() {
                     type="number"
                     step="any"
                     className="mt-1"
-                    {...register('longitude', { valueAsNumber: true })}
+                    value={longitude ?? ''}
                     readOnly
                   />
                 </div>
@@ -336,7 +443,8 @@ export default function CreateAssetHistoryPage() {
                   <Input
                     type="text"
                     className="mt-1"
-                    {...register('address')}
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
                   />
                   <Button
                     type="button"
@@ -351,12 +459,12 @@ export default function CreateAssetHistoryPage() {
               </div>
             )}
 
-            {/* Assigned to section */}
             <div className="flex items-center gap-2 mb-4">
               <input
                 type="checkbox"
                 id="assigned-to"
-                {...register('assignedTo')}
+                checked={assignedTo}
+                onChange={(e) => setAssignedTo(e.target.checked)}
                 className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <label
@@ -373,11 +481,13 @@ export default function CreateAssetHistoryPage() {
                   User
                 </label>
                 <select
+                  required
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  {...register('userId')}
+                  value={selectedUser}
+                  onChange={(e) => setSelectedUser(e.target.value)}
                 >
                   <option value="">Select a user</option>
-                  {users.map((user) => (
+                  {users.map(user => (
                     <option key={user.id} value={user.id}>
                       {user.name}
                     </option>
@@ -394,14 +504,7 @@ export default function CreateAssetHistoryPage() {
               >
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={createAssetHistoryMutation.isPending}
-              >
-                {createAssetHistoryMutation.isPending
-                  ? 'Creating...'
-                  : 'Create History Entry'}
-              </Button>
+              <Button type="submit">Create History Entry</Button>
             </div>
           </form>
         </div>
