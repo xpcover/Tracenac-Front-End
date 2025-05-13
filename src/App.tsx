@@ -55,6 +55,7 @@ import { Provider } from 'react-redux'
 import { store } from './redux/store';
 import { Toaster } from 'react-hot-toast';
 import AddEditAssetPage from './pages/assets/AddEditAsset';
+import BulkUrlEditPage from './pages/short-urls/BulkUrlEditPage';
 
 function App() {
   return (
@@ -117,6 +118,7 @@ function App() {
           <Route path="short-urls/create" element={<CreateShortUrlPage />} />
           <Route path="bulk-urls" element={<BulkUrlListPage />} />
           <Route path="bulk-urls/create" element={<BulkCreateUrlPage />} />
+          <Route path="bulk-urls/edit" element={<BulkUrlEditPage />} />
           <Route path="generate-barcode" element={<BarCodeGenerate />} />
 
           <Route path="map" element={<Map />} />

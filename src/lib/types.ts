@@ -123,6 +123,11 @@ export interface CostCentre {
   updated_at: string
 }
 
+export interface Template {
+  id: string;
+  name: string;
+}
+
 // Zod schemas for form validation
 export const assetSchema = z.object({
   asset_code: z.string().min(1, 'Asset code is required'),
@@ -155,6 +160,7 @@ export const assetSchema = z.object({
   barcode: z.string().nullable(),
   impairment_value: z.number().min(0, 'Impairment value must be positive'),
   notes: z.string().nullable(),
+  assetId: z.string().optional(),
 })
 
 export const assetComponentSchema = z.object({

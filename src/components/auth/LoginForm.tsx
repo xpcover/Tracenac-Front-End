@@ -1,55 +1,60 @@
-import { FormEvent, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import {  Lock, User } from 'lucide-react';
+import { Lock, User } from 'lucide-react';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
+import ApiService from '@/services/api.service';
+import toast from 'react-hot-toast';
+
+// Zod validation schema
+const loginSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginForm() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+  
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
   });
-  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setError(null);
+  const { mutate: login, isPending } = useMutation({
+    mutationFn: (data: LoginFormData) =>
+      ApiService.post('/admin/superadmin-login', data),
 
-    try {
-      const response = await fetch('https://api.tracenac.com/api/admin/superadmin-login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
-      });
+    onSuccess: (response) => {
+      const { data } = response;
 
-      if (!response.ok) {
-        throw new Error('Authentication failed');
-      }
+      toast.success('Login successful');
+      // Store user data
+      localStorage.setItem('user', JSON.stringify(data));
+      localStorage.setItem('tenantId', data?.tenantId || '');
+      localStorage.setItem('userId', data?.id);
+      localStorage.setItem('userRole', data?.userRole);
+      localStorage.setItem('email', data?.email);
+      localStorage.setItem('token', data?.token);
 
-      const data = await response.json();
-      console.log('Authentication successful:', data);
-
-      // Save response data in local storage
-      localStorage.setItem('user',JSON.stringify(data.msg));
-
-      localStorage.setItem('tenantId', data.msg.tenantId);
-      localStorage.setItem('userId', data.msg.id);
-      localStorage.setItem('userRole', data.msg.userRole);
-      localStorage.setItem('email', data.msg.email);
-      localStorage.setItem('token', data.msg.token);
-
-      // Navigate to the dashboard on successful authentication
       navigate('/dashboard');
-    } catch (error) {
-      console.error('Error during authentication:', error);
-      setError('Authentication failed. Please check your credentials and try again.');
-    }
+    },
+
+    onError: (error: any) => {
+      console.error('Login error:', error);
+      toast.error('Login failed');
+    },
+  });
+
+  const onSubmit = (data: LoginFormData) => {
+    login(data);
   };
 
   return (
@@ -60,7 +65,8 @@ export default function LoginForm() {
             Sign in to your account
           </h2>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="rounded-md shadow-sm space-y-4">
             <div className="relative">
               <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
@@ -68,29 +74,33 @@ export default function LoginForm() {
                 type="email"
                 placeholder="Email"
                 className="pl-10"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
+                {...register('email')}
               />
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+              )}
             </div>
+            
             <div className="relative">
               <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
               <Input
                 type="password"
                 placeholder="Password"
                 className="pl-10"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
+                {...register('password')}
               />
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+              )}
             </div>
           </div>
-          {error && <div className="text-red-500 text-center">{error}</div>}
           <div>
-            <Button type="submit" className="w-full">
-              Sign In
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={isPending}
+            >
+              {isPending ? 'Signing in...' : 'Sign In'}
             </Button>
           </div>
         </form>

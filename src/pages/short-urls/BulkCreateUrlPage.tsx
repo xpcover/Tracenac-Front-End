@@ -1,243 +1,393 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react'
-import { PageHeader } from '@/components/ui/PageHeader'
-import Button from '@/components/ui/Button'
-import Input from '@/components/ui/Input'
+import { useFieldArray, useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
+import {
+  ArrowLeft,
+  ArrowUpFromLine,
+  FileCode,
+  Loader2,
+  Plus,
+  Trash2,
+} from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import { QrCodeModal } from "./QrCodeModal";
+import { Asset } from "@/lib/types";
+import ApiService from "@/services/api.service";
+import { useState } from "react";
+import Select from "react-select";
+import { Modal } from "@/components/ui/Modal";
+import { ErrorMessage } from "@/components/ui/ErrorMessage";
+import toast from "react-hot-toast";
 
-// Mock data for dropdowns
-const mockBusinessUnits = ['IT', 'HR', 'Finance', 'Operations']
-const mockLocations = ['HQ', 'Branch A', 'Branch B', 'Warehouse']
-const mockAssets = [
-  { id: 'LAP001', name: 'MacBook Pro 16"' },
-  { id: 'LAP002', name: 'Dell XPS 15' },
-  { id: 'DSK001', name: 'HP Desktop PC' },
-]
-
-const QR_TEMPLATES = [
-  { id: 'basic', name: 'Basic Template' },
-  { id: 'branded', name: 'Branded Template' },
-  { id: 'modern', name: 'Modern Design' },
-  { id: 'minimal', name: 'Minimal Style' },
-]
-
-interface AssetUrlConfig {
-  assetId: string
-  urlCount: number
-}
-
-export default function BulkCreateUrlPage() {
-  const navigate = useNavigate()
-  const [formData, setFormData] = useState({
-    businessUnit: '',
-    location: '',
-    generateQr: false,
-    qrTemplate: 'basic',
-  })
-
-  const [assetConfigs, setAssetConfigs] = useState<AssetUrlConfig[]>([
-    { assetId: '', urlCount: 1 }
-  ])
-
-  const addAssetConfig = () => {
-    setAssetConfigs([...assetConfigs, { assetId: '', urlCount: 1 }])
-  }
-
-  const removeAssetConfig = (index: number) => {
-    setAssetConfigs(assetConfigs.filter((_, i) => i !== index))
-  }
-
-  const updateAssetConfig = (index: number, field: keyof AssetUrlConfig, value: string | number) => {
-    const newConfigs = [...assetConfigs]
-    newConfigs[index] = {
-      ...newConfigs[index],
-      [field]: value
-    }
-    setAssetConfigs(newConfigs)
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // In a real app, this would make an API call
-    console.log('Create bulk URLs:', {
-      ...formData,
-      assetConfigs
+// Zod validation schema
+const schema = z.object({
+  generateQr: z.boolean().default(false),
+  items: z.array(
+    z.object({
+      itemCode: z.string().min(1, "Item Code is required"),
+      units: z.number().min(1, "Units is required"),
+      supplier: z.string().min(1, "Supplier is required"),
     })
-    navigate('/bulk-urls')
-  }
+  ),
+  bu: z.string().min(1, "Business Unit is required"),
+  qrTemplate: z.string().optional(),
+  labelType: z.string().optional(),
+  labelName: z.string().optional(),
+});
 
-  const totalUrls = assetConfigs.reduce((sum, config) => sum + config.urlCount, 0)
+type FormData = z.infer<typeof schema>;
+
+export default function CreateBulkUrlPage() {
+  const navigate = useNavigate();
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [uploadModal, setUploadModal] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    control,
+    formState: { errors },
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      generateQr: false,
+      bu: "",
+      items: [{ itemCode: "", units: 1, supplier: "" }],
+    },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "items",
+  });
+
+  const { data: assets, isLoading: isLoadingAssets } = useQuery({
+    queryKey: ["assets"],
+    queryFn: () => ApiService.get("/assets"),
+  });
+
+  const { data: businessUnits, isLoading: isLoadingBU } = useQuery({
+    queryKey: ["business-unit"],
+    queryFn: () => ApiService.getAll("/partner/bu"),
+  });
+
+  const { data: suppliers, isLoading: isLoadingSupplier } = useQuery({
+    queryKey: ["suppliers"],
+    queryFn: () => ApiService.get("/partner/suppliers"),
+  });
+
+  const createShortUrl = useMutation({
+    mutationFn: (data: FormData) => ApiService.post("/generator/batch", data),
+    onSuccess: (data) => {
+      toast.success("Short URL created successfully");
+      console.log("Short URL created:", data);
+    },
+    onError: (error) => {
+      toast.error("Failed to create short URL");
+      console.error("Error creating short URL:", error);
+    },
+  });
+
+  const onSubmit = (data: FormData) => {
+    createShortUrl.mutate(data);
+  };
+
+  const totalUrls = fields.reduce(
+    (sum, _, i) => sum + (watch(`items.${i}.units`) || 0),
+    0
+  );
+  const generateQr = watch("generateQr");
+
+  const handleLabelValue = (data: any[], val: string, lbl?: string | null) => {
+    if (!data || data?.length < 1) return [];
+    return data?.map((item) => ({
+      value: item[val],
+      label: lbl ? item[lbl] : item[val],
+    }));
+  };
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Bulk Create URL"
-        description="Create multiple shortened URLs at once"
-      >
-        <Button variant="ghost" onClick={() => navigate('/bulk-urls')}>
+      <PageHeader title="Create Bulk URL" description="Create a bulk URL">
+        <Button variant="ghost" onClick={() => navigate("/bulk-urls")}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Bulk URLs
         </Button>
       </PageHeader>
 
       <div className="bg-white rounded-lg shadow">
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="max-w-xl">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2">
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">
+                Business Unit
+              </label>
+              <Controller
+                name="bu"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    options={handleLabelValue(businessUnits, "bu")}
+                    isLoading={isLoadingBU}
+                    classNamePrefix="react-select"
+                    onChange={(selected) => field.onChange(selected?.value)}
+                  />
+                )}
+              />
+              {errors?.bu?.message && (
+                <ErrorMessage>{errors.bu.message}</ErrorMessage>
+              )}
+            </div>
+            <div className="space-y-2 flex flex-col items-end">
+              <p className="text-xs flex items-center gap-1">
+                Download CSV Template <FileCode className="w-4 h-4" />
+              </p>
+              <Button type="button" onClick={() => setUploadModal(true)}>
+                Upload CSV <ArrowUpFromLine className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Business Unit
-                </label>
-                <select
-                  value={formData.businessUnit}
-                  onChange={(e) => setFormData({ ...formData, businessUnit: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  required
+              <div className="flex justify-between">
+                <p>Asset URLs</p>
+                <Button
+                  type="button"
+                  onClick={() =>
+                    append({ itemCode: "", units: 1, supplier: "" })
+                  }
                 >
-                  <option value="">Select Business Unit</option>
-                  {mockBusinessUnits.map(unit => (
-                    <option key={unit} value={unit}>{unit}</option>
-                  ))}
-                </select>
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add Asset
+                </Button>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Location
-                </label>
-                <select
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  required
-                >
-                  <option value="">Select Location</option>
-                  {mockLocations.map(location => (
-                    <option key={location} value={location}>{location}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Asset Configurations */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-medium">Asset URLs</h3>
-                  <Button
-                    type="button"
-                    onClick={addAssetConfig}
-                    disabled={totalUrls >= 100}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Asset
-                  </Button>
-                </div>
-
-                {assetConfigs.map((config, index) => (
-                  <div key={index} className="p-4 border rounded-lg space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-medium">Asset {index + 1}</h4>
-                      {index > 0 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          onClick={() => removeAssetConfig(index)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+              {fields.map((field, index) => (
+                <div key={field.id} className="space-y-4 border p-3 rounded-lg">
+                  <p className="flex items-center justify-between">
+                    Asset {index + 1}
+                    {fields.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => remove(index)}
+                        className="text-red-500"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </p>
+                  <div className="flex flex-col xl:flex-row gap-2">
+                    <div className="space-y-1">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Asset Id
+                      </label>
+                      <Controller
+                        name={`items.${index}.itemCode`}
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            className="react-select-container min-w-[10rem]"
+                            classNamePrefix="react-select"
+                            options={handleLabelValue(assets, "assetId", "assetName")}
+                            isLoading={isLoadingAssets}
+                            getOptionValue={(asset: Asset) => asset?.value}
+                            getOptionLabel={(asset: Asset) => asset?.label}
+                            onChange={(selected) =>
+                              field.onChange(selected?.value)
+                            }
+                          />
+                        )}
+                      />
+                      {errors?.items?.[index]?.itemCode?.message && (
+                        <ErrorMessage>
+                          {errors.items[index]?.itemCode?.message}
+                        </ErrorMessage>
                       )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                          Asset
-                        </label>
-                        <select
-                          value={config.assetId}
-                          onChange={(e) => updateAssetConfig(index, 'assetId', e.target.value)}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                          required
-                        >
-                          <option value="">Select Asset</option>
-                          {mockAssets.map(asset => (
-                            <option key={asset.id} value={asset.id}>
-                              {asset.id} - {asset.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                          Number of URLs
-                        </label>
-                        <Input
-                          type="number"
-                          min="1"
-                          max={100 - (totalUrls - config.urlCount)}
-                          value={config.urlCount}
-                          onChange={(e) => updateAssetConfig(index, 'urlCount', parseInt(e.target.value))}
-                          required
-                          className="mt-1"
-                        />
-                      </div>
+                    <Input
+                      label="Number Of URLs"
+                      {...register(`items.${index}.units`, {
+                        valueAsNumber: true,
+                      })}
+                      placeholder="Please enter number of URLs"
+                      type="number"
+                      min="1"
+                      error={errors?.items?.[index]?.units?.message}
+                    />
+
+                    <div className="space-y-1 flex-1">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Supplier
+                      </label>
+                      <Controller
+                        name={`items.${index}.supplier`}
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            className="react-select-container"
+                            classNamePrefix="react-select"
+                            options={handleLabelValue(suppliers, "partnerName")}
+                            isLoading={isLoadingSupplier}
+                            onChange={(selected) =>
+                              field.onChange(selected?.value)
+                            }
+                          />
+                        )}
+                      />
+                      {errors?.items?.[index]?.supplier?.message && (
+                        <ErrorMessage>
+                          {errors.items[index]?.supplier?.message}
+                        </ErrorMessage>
+                      )}
                     </div>
                   </div>
-                ))}
-
-                <p className="text-sm text-gray-500">
-                  Total URLs to generate: {totalUrls} (Maximum 100)
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="bulk-generate-qr"
-                    checked={formData.generateQr}
-                    onChange={(e) => setFormData({ ...formData, generateQr: e.target.checked })}
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <label htmlFor="bulk-generate-qr" className="text-sm text-gray-700">
-                    Generate QR Codes
-                  </label>
                 </div>
+              ))}
 
-                {formData.generateQr && (
-                  <div className="pl-6">
-                    <label className="block text-sm font-medium text-gray-700">
-                      QR Code Template
-                    </label>
-                    <select
-                      value={formData.qrTemplate}
-                      onChange={(e) => setFormData({ ...formData, qrTemplate: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    >
-                      {QR_TEMPLATES.map(template => (
-                        <option key={template.id} value={template.id}>
-                          {template.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+              <p className="text-slate-500 text-sm">
+                Total URLs to generate: {totalUrls} (Maximum 100)
+              </p>
+
+              <div className="flex items-center gap-2">
+                <input
+                  id="generateQr"
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  {...register("generateQr")}
+                />
+                <label htmlFor="generateQr" className="text-sm">
+                  Generate QR Codes
+                </label>
               </div>
-            </div>
 
-            <div className="mt-6 flex gap-2">
-              <Button type="submit" className="px-6">Create URLs</Button>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => navigate('/short-urls')}
-                className="px-6"
-              >
-                Cancel
+              {generateQr && (
+                <>
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      QR Template
+                    </label>
+                    <Controller
+                      name="qrTemplate"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          className="react-select-container"
+                          classNamePrefix="react-select"
+                          options={[
+                            { value: "default", label: "Default Template" },
+                            { value: "minimal", label: "Minimal Design" },
+                            { value: "branded", label: "Branded Template" },
+                          ]}
+                          value={[
+                            { value: "default", label: "Default Template" },
+                            { value: "minimal", label: "Minimal Design" },
+                            { value: "branded", label: "Branded Template" },
+                          ].find((option) => option.value === field.value)}
+                          onChange={(selected) =>
+                            field.onChange(selected?.value)
+                          }
+                        />
+                      )}
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Label Type
+                    </label>
+                    <Controller
+                      name="labelType"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          className="react-select-container"
+                          classNamePrefix="react-select"
+                        />
+                      )}
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Label Name
+                    </label>
+                    <Controller
+                      name="labelName"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          className="react-select-container"
+                          classNamePrefix="react-select"
+                        />
+                      )}
+                    />
+                  </div>
+                </>
+              )}
+
+              <Button type="submit" disabled={createShortUrl.isPending}>
+                {createShortUrl.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Plus className="w-4 h-4 mr-2" />
+                )}
+                Create URLs
               </Button>
+            </div>
+            <div className="space-y-5">
+              <div className="space-y-2 max-w-[80%] max-h-[50dvh] overflow-hidden">
+                <p>Page Design</p>
+                <img
+                  src="/images/preview.png"
+                  alt=""
+                  className="object-cover"
+                />
+              </div>
+              {generateQr && (
+                <div className="w-[40dvh] h-[40dvh]">
+                  <img
+                    src="/images/preview.png"
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </form>
       </div>
+
+      <Modal
+        title="Upload files"
+        isOpen={uploadModal}
+        onClose={() => setUploadModal(false)}
+      >
+        <div className="space-y-4">
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+            <h3 className="font-medium">Drop files here</h3>
+            <p className="text-sm text-gray-500 mt-1">Supported format: CSV.</p>
+            <div className="my-2 text-sm text-gray-500">OR</div>
+            <Button>Browse files</Button>
+          </div>
+        </div>
+      </Modal>
+
+      <QrCodeModal
+        isOpen={showQrModal}
+        onClose={() => {
+          setShowQrModal(false);
+          navigate("/short-urls");
+        }}
+        url={watch("url")}
+        templateId={watch("qrTemplate")}
+      />
     </div>
-  )
+  );
 }

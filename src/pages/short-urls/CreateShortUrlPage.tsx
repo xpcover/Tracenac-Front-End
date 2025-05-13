@@ -85,16 +85,14 @@ export default function CreateShortUrlPage() {
         </form>
       </div>
 
-      {showQrModal && (
         <QrCodeModal
-          isOpen={true}
+          isOpen={showQrModal}
           onClose={() => {
             setShowQrModal(false)
             navigate('/short-urls')
           }}
           url={url}
         />
-      )}
     </div>
   )
 }

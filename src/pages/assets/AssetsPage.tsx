@@ -82,7 +82,7 @@ const columns = [
     ),
   }),
   columnHelper.accessor('impairmentValue', {
-    header: 'Impairment Value',
+    header: 'Current Value',
     cell: (info) => (
       <span className="font-mono">
         {info.getValue()["$numberDecimal"]}
@@ -116,12 +116,12 @@ export default function AssetsPage() {
   });
   
   const handleDelete = (asset: Asset) => {
-    deleteMutation.mutate(`/assets/${asset?._id}`)
+    deleteMutation.mutate(`/assets/${asset?.assetId}`)
   }
 
   
   const handleAssetClick = (asset: Asset) => {
-    navigate(`/assets/${asset?.asset_id}`)
+    navigate(`/assets/${asset?.assetId}`)
   }
 
   const additionalFilters = (
