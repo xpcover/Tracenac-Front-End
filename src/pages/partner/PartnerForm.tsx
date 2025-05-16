@@ -39,11 +39,12 @@ type PartnerFormData = z.infer<typeof PartnerSchema>
 
 interface PartnerFormProps{
   partner?: Partner | null
+  viewPartner?: Partner | null
   setIsModalOpen: (arg: boolean) => void
   users?: any 
 }
 
-export default function PartnerForm({ partner,setIsModalOpen,users }:PartnerFormProps) {
+export default function PartnerForm({ partner,viewPartner,setIsModalOpen,users }:PartnerFormProps) {
   // console.log(partner)
   const {
     register,
@@ -53,18 +54,19 @@ export default function PartnerForm({ partner,setIsModalOpen,users }:PartnerForm
   } = useForm<PartnerFormData>({
     resolver: zodResolver(PartnerSchema),
     defaultValues: {
-      partnerId: partner?.partnerId || '',
-      partnerName: partner?.partnerName || '',
-      partnerCategory:partner?.partnerCategory || '',
-      city: partner?.city || '',
-      pincode : partner?.pincode || '',
-      country: partner?.country || '',
-      company : partner?.company || '',
-      partnerUserEmailId : partner?.email || '',
-      partnerAppUserPhoneNo : partner?.phone || '',
-      latitude: partner?.lat || '',
-      longitude : partner?.long || ''
-    },
+      partnerId: partner?.partnerId || viewPartner?.partnerId || '',
+      partnerName: partner?.partnerName || viewPartner?.partnerName || '',
+      partnerCategory: partner?.partnerCategory || viewPartner?.partnerCategory || '',
+      city: partner?.city || viewPartner?.city || '',
+      pincode: partner?.pincode || viewPartner?.pincode || '',
+      country: partner?.country || viewPartner?.country || '',
+      company: partner?.company || viewPartner?.company || '',
+      partnerUserEmailId: partner?.partnerUserEmailId || viewPartner?.partnerUserEmailId || '',
+      partnerAppUserPhoneNo: partner?.partnerAppUserPhoneNo || viewPartner?.partnerAppUserPhoneNo || '',
+      latitude: partner?.lat || viewPartner?.lat || '',
+      longitude: partner?.long || viewPartner?.long || '',
+      assignedPerson: partner?.assignedPerson || viewPartner?.assignedPerson || '',
+    }    
   })
   console.log("Partner", partner)
 
@@ -288,9 +290,11 @@ export default function PartnerForm({ partner,setIsModalOpen,users }:PartnerForm
 </div>
 
 
-      <Button type="submit" className="mt-4">
-        Save Partner
-      </Button>
+     {!viewPartner && (
+        <Button type="submit" className="mt-4">
+          Save Partner
+        </Button>
+      )}
     </form>
   )
 };
