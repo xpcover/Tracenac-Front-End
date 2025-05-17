@@ -24,12 +24,20 @@ const budgetSchema = z.object({
 
 type BudgetFormData = z.infer<typeof budgetSchema>
 
+// interface PartnerFormProps{
+//   partner?: Partner | null
+//   viewPartner?: Partner | null
+//   setIsModalOpen: (arg: boolean) => void
+//   users?: any 
+// }
+
 interface BudgetFormProps {
   budget?: Budget | null
   setIsModalOpen: (arg: boolean) => void
+  viewBudget?: Budget | null
 }
 
-export default function BudgetForm({ budget, setIsModalOpen }: BudgetFormProps) {
+export default function BudgetForm({ budget,viewBudget, setIsModalOpen }: BudgetFormProps) {
   const {
     register,
     handleSubmit,
@@ -37,11 +45,11 @@ export default function BudgetForm({ budget, setIsModalOpen }: BudgetFormProps) 
   } = useForm<BudgetFormData>({
     resolver: zodResolver(budgetSchema),
     defaultValues: {
-      assetId: budget?.assetId || '',
+      assetId: budget?.assetId || viewBudget?.assetId || '',
       fiscal_year: budget?.fiscal_year || new Date().getFullYear().toString(),
-      budget_amount: budget?.budget_amount || 0, // convert number to string
-      actual_amount: budget?.actual_amount || 0, // convert number to string
-      createdBy: budget?.createdBy || localStorage.getItem('userId') || '',
+      budget_amount: budget?.budget_amount || viewBudget?.budget_amount || 0, // convert number to string
+      actual_amount: budget?.actual_amount || viewBudget?.actual_amount ||0, // convert number to string
+      createdBy: budget?.createdBy || viewBudget?.createdBy || localStorage.getItem('userId') || '',
     },
   })
 

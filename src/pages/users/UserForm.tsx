@@ -24,11 +24,12 @@ type UserFormData = z.infer<typeof userSchema>
 
 interface UserFormProps {
   user?: User | null
+  viewUser?: User | null
   setIsModalOpen: (arg: boolean) => void
   roles: string[]
 }
 
-export default function UserForm({ user,roles, setIsModalOpen, }: UserFormProps) {
+export default function UserForm({ user,roles, setIsModalOpen,viewUser }: UserFormProps) {
   const {
     register,
     handleSubmit,
@@ -36,13 +37,13 @@ export default function UserForm({ user,roles, setIsModalOpen, }: UserFormProps)
   } = useForm<UserFormData>({
     resolver: zodResolver(userSchema),
     defaultValues: {
-      username: user?.username || '',
-      first_name: user?.first_name || '',
-      last_name: user?.last_name || '',
-      email: user?.email || '',
+      username: user?.username || viewUser?.username || '',
+      first_name: user?.first_name || viewUser?.first_name || '',
+      last_name: user?.last_name || viewUser?.last_name || '',
+      email: user?.email || viewUser?.email || '',
       is_active: user?.is_active ?? true,
-      userRole: user?.userRole || '',
-      phone:user?.phone || ""
+      userRole: user?.userRole || viewUser?.userRole || '',
+      phone:user?.phone || viewUser?.phone || '',
     },
   })
 

@@ -34,9 +34,10 @@ const columns = [
 ]
 
 export default function UsersPage() {
-    const [roles, setRoles] = useState<any[]>([]);
+  const [roles, setRoles] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [viewUser, setViewUser] = useState<User | null>(null)
   
   // const [users, setUsers] = useState<User[]>([])
   // console.log("Editing",editingUser)
@@ -61,6 +62,11 @@ export default function UsersPage() {
 
   const handleDelete = (user: User) => {
     deleteMutation.mutate(`/user${user?._id}`)
+  }
+
+  const handleView = (user: User) => {
+    setViewUser(user)
+    setIsModalOpen(true)
   }
 
   const fetchRole = async () => {
@@ -93,6 +99,7 @@ export default function UsersPage() {
         url="/user"
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onView = {handleView}
        />
 
       {/* Handling Toggle */}
@@ -101,8 +108,15 @@ export default function UsersPage() {
         onClose={() => {
           setIsModalOpen(false)
           setEditingUser(null)
+          setViewUser(null)
         }}
-        title={editingUser ? 'Edit User' : 'Add Employee'}
+        title={
+          viewUser
+            ? 'View User' // 👈 Set title for view mode
+            : editingUser
+            ? 'Edit User'
+            : 'Add  User'
+        }
       >
 
         {/* Handling User Submission */}
@@ -110,6 +124,7 @@ export default function UsersPage() {
           roles={roles}
           user={editingUser}
           setIsModalOpen={setIsModalOpen}
+          viewUser={viewUser}
         />
       </Modal>
     </div>

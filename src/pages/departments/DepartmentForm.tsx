@@ -17,12 +17,14 @@ type DepartmentFormData = z.infer<typeof departmentSchema>
 interface DepartmentFormProps {
   department?: Department | null
   setIsModalOpen: (arg: boolean) => void
+  viewDepartment?: Department | null
 }
 
 
 export default function DepartmentForm({
   department,
   setIsModalOpen,
+  viewDepartment
 }: DepartmentFormProps) {
   const {
     register,
@@ -31,7 +33,7 @@ export default function DepartmentForm({
   } = useForm<DepartmentFormData>({
     resolver: zodResolver(departmentSchema),
     defaultValues: {
-      departmentName: department?.departmentName|| '',
+      departmentName: department?.departmentName|| viewDepartment?.departmentName || '',
     },
   })
 
@@ -98,9 +100,11 @@ export default function DepartmentForm({
         )}
       </div>
 
+      {!viewDepartment && (
       <div className="flex justify-end gap-2">
-        <Button type="submit">Save Department</Button>
-      </div>
+      <Button type="submit">Save Department</Button>
+    </div>
+      )}
     </form>
   )
 }

@@ -82,6 +82,7 @@ const mockLabels: AssetLabel[] = [
 export default function AssetLabelsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingLabel, setEditingLabel] = useState<AssetLabel | null>(null)
+  const [viewComponent,setViewComponent] = useState<AssetLabel  | null>(null)
 
   const handleEdit = (label: AssetLabel) => {
     setEditingLabel(label)
@@ -91,6 +92,11 @@ export default function AssetLabelsPage() {
   const handleDelete = (label: AssetLabel) => {
     // In a real app, this would make an API call
     console.log('Delete label:', label)
+  }
+
+  const handleView = (label: AssetLabel) => {
+    setViewComponent(label)
+    setIsModalOpen(true)
   }
 
   return (
@@ -109,6 +115,7 @@ export default function AssetLabelsPage() {
         data={mockLabels}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onView = {handleView}
       />
 
       <Modal

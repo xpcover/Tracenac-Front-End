@@ -30,6 +30,7 @@ const columns = [
 export default function DepartmentPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingDepartment, setEditingDepartment] = useState<Department | null>(null)
+  const [viewDepartment, setViewDepartment] = useState<Department | null>(null)
 
   const queryClient = useQueryClient();
 
@@ -46,6 +47,11 @@ export default function DepartmentPage() {
 
   const handleEdit = (department: Department) => {
     setEditingDepartment(department)
+    setIsModalOpen(true)
+  }
+  
+  const handleView = (department:Department)=>{
+    setViewDepartment(department)
     setIsModalOpen(true)
   }
 
@@ -69,6 +75,7 @@ export default function DepartmentPage() {
         url="/department/departments"
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onView = {handleView}
       />
 
       <Modal
@@ -76,12 +83,20 @@ export default function DepartmentPage() {
         onClose={() => {
           setIsModalOpen(false)
           setEditingDepartment(null)
+          setViewDepartment(null)
         }}
-        title={editingDepartment ? 'Edit Department' : 'Add Department'}
+        title={
+          viewDepartment
+            ? 'View Department' // 👈 Set title for view mode
+            : editingDepartment
+            ? 'Edit Department'
+            : 'Add  Department'
+        }
       >
       <DepartmentForm
           department={editingDepartment}
           setIsModalOpen={setIsModalOpen}
+          viewDepartment={viewDepartment}
       />
       </Modal>
     </div>

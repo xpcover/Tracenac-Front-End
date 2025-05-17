@@ -6,7 +6,6 @@ import { DataTable } from '@/components/ui/Table'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Modal } from '@/components/ui/Modal'
 import AssetHistoryForm from './AssetHistoryForm'
-import axios from 'axios'
 
 interface AssetHistory {
   _id: string
@@ -38,7 +37,7 @@ const columns = [
       </Link>
     ),
   }),
-  columnHelper.accessor('date', {
+  columnHelper.accessor('createdAt', {
     header: 'Date',
     cell: (info) => {
       const value = info.getValue()
@@ -46,7 +45,7 @@ const columns = [
     },
   }),
   columnHelper.accessor('reportType', {
-    header: 'Report Type',
+    header: 'Report Name',
     cell: (info) => info.getValue() || 'N/A',
   }),
   columnHelper.accessor('address', {
@@ -67,6 +66,9 @@ export default function AssetHistoryPage() {
   const navigate = useNavigate()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingHistory, setEditingHistory] = useState<AssetHistory | null>(null)
+  const [viewComponent,setViewComponent] = useState<AssetHistory | null>(null)
+
+  console.log(editingHistory)
 
   const handleEdit = (history: AssetHistory) => {
     setEditingHistory(history)
@@ -81,14 +83,21 @@ export default function AssetHistoryPage() {
     navigate(`/assets/${assetId}`)
   }
 
+  const handleView = (history: AssetHistory) => {
+    setViewComponent(history)
+    setIsModalOpen(true)
+  };
+    
+
   return (
     <div>
-      <PageHeader title="Asset History" description="Track changes and updates to assets" />
+      <PageHeader title="Report History" description="Track changes and updates to Report" />
         <DataTable
-          url='/assets/asset-history'
+          url='/assets/asset-history/'
           columns={columns}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onView = {handleView}
           showFilters
           showDateFilter
           meta={{ onAssetClick: handleAssetClick }}
