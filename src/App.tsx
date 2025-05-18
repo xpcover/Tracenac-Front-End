@@ -37,7 +37,7 @@ import WipAssetsPage from './pages/wip-assets/WipAssetsPage';
 import ReportTemplateList from './pages/reports/templates/ReportTemplateList';
 import ShortUrlsPage from './pages/short-urls/ShortUrlsPage';
 import CreateShortUrlPage from './pages/short-urls/CreateShortUrlPage';
-import BulkCreateUrlPage from './pages/short-urls/BulkCreateUrlPage';
+import BulkCreateUrlPage from './pages/bulk-urls/BulkCreateUrlPage';
 // import PartnersPage from './pages/partner/PartnerForm';
 import PartnerList from './pages/partner/PartnerPage';
 // Create Reports Pages
@@ -49,13 +49,16 @@ import CreateWipAssetPage from './pages/create-reports/CreateWipAssetPage';
 import CreateShiftUsagePage from './pages/create-reports/CreateShiftUsagePage';
 import Map from './pages/leaflet-map/Map';
 import DashboardPage from './pages/dashboard/DashboardPage';
-import BarCodeGenerate from './pages/short-urls/generate-barcode/BarCodeGenerate';
-import BulkUrlListPage from './pages/short-urls/BulkUrlListPage';
+import BarCodeGenerate from './pages/generate-barcode/BarCodeGenerate';
+import BulkUrlListPage from './pages/bulk-urls/BulkUrlListPage';
 import { Provider } from 'react-redux'
 import { store } from './redux/store';
 import { Toaster } from 'react-hot-toast';
 import AddEditAssetPage from './pages/assets/AddEditAsset';
-import BulkUrlEditPage from './pages/short-urls/BulkUrlEditPage';
+import BulkUrlEditPage from './pages/bulk-urls/BulkUrlEditPage';
+import EditShortURLPage from './pages/short-urls/EditShortUrlPage';
+import AnalyzePack from './pages/short-urls/pack-chain/AnalyzePack';
+import PreConfiguredLevel from './pages/short-urls/pack-chain/PreConfiguredLevel';
 
 function App() {
   return (
@@ -116,9 +119,10 @@ function App() {
           <Route path="wip-assets" element={<WipAssetsPage />} />
           <Route path="short-urls" element={<ShortUrlsPage />} />
           <Route path="short-urls/create" element={<CreateShortUrlPage />} />
+          <Route path="short-urls/edit/:id" element={<EditShortURLPage />} />
           <Route path="bulk-urls" element={<BulkUrlListPage />} />
           <Route path="bulk-urls/create" element={<BulkCreateUrlPage />} />
-          <Route path="bulk-urls/edit" element={<BulkUrlEditPage />} />
+          <Route path="bulk-urls/edit/:id" element={<BulkUrlEditPage />} />
           <Route path="generate-barcode" element={<BarCodeGenerate />} />
 
           <Route path="map" element={<Map />} />
@@ -130,6 +134,10 @@ function App() {
           <Route path="create-reports/lease" element={<CreateLeasePage />} />
           <Route path="create-reports/wip-asset" element={<CreateWipAssetPage />} />
           <Route path="create-reports/shift-usage" element={<CreateShiftUsagePage />} />
+
+          <Route path="/analyze-pack" element={<AnalyzePack />} />
+          <Route path="/pre-configured-level" element={<PreConfiguredLevel />} />
+
         </Route>
       </Routes>
     </BrowserRouter>

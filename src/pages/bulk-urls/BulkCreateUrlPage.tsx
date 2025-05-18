@@ -14,14 +14,14 @@ import {
 import { PageHeader } from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import { QrCodeModal } from "./QrCodeModal";
-import { Asset } from "@/lib/types";
+import { QrCodeModal } from "../../components/modals/QrCodeModal";
 import ApiService from "@/services/api.service";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Select from "react-select";
 import { Modal } from "@/components/ui/Modal";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import toast from "react-hot-toast";
+import UploadCSVModal from "../../components/modals/UploadCSVModal";
 
 // Zod validation schema
 const schema = z.object({
@@ -41,6 +41,11 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
+interface AssetOption {
+  value: string;
+  label: string;
+}
+
 export default function CreateBulkUrlPage() {
   const navigate = useNavigate();
   const [showQrModal, setShowQrModal] = useState(false);
@@ -50,6 +55,7 @@ export default function CreateBulkUrlPage() {
     register,
     handleSubmit,
     watch,
+    setValue,
     control,
     formState: { errors },
   } = useForm<FormData>({
@@ -110,6 +116,31 @@ export default function CreateBulkUrlPage() {
       label: lbl ? item[lbl] : item[val],
     }));
   };
+
+  const handleCSVDataUpload = useCallback((
+  data: Array<{
+    itemCode: string;
+    units: number;
+    supplier: string;
+  }>, 
+  bu?: string
+) => {
+  remove();
+  
+  if (bu) {
+    console.log("===>",bu);
+    setValue('bu', businessUnits?.find((bu) => bu.value === bu));
+  }
+  
+  data.forEach((item) => {
+    append({
+      itemCode: item.itemCode,
+      units: item.units,
+      supplier: item.supplier
+    });
+  });
+}, [append, remove, setValue]);
+
 
   return (
     <div className="space-y-6">
@@ -194,10 +225,18 @@ export default function CreateBulkUrlPage() {
                           <Select
                             className="react-select-container min-w-[10rem]"
                             classNamePrefix="react-select"
-                            options={handleLabelValue(assets, "assetId", "assetName")}
+                            options={handleLabelValue(
+                              assets,
+                              "assetId",
+                              "assetName"
+                            )}
                             isLoading={isLoadingAssets}
-                            getOptionValue={(asset: Asset) => asset?.value}
-                            getOptionLabel={(asset: Asset) => asset?.label}
+                            getOptionValue={(asset: AssetOption) =>
+                              asset?.value
+                            }
+                            getOptionLabel={(asset: AssetOption) =>
+                              asset?.label
+                            }
                             onChange={(selected) =>
                               field.onChange(selected?.value)
                             }
@@ -307,6 +346,7 @@ export default function CreateBulkUrlPage() {
                       control={control}
                       render={({ field }) => (
                         <Select
+                          {...field}
                           className="react-select-container"
                           classNamePrefix="react-select"
                         />
@@ -323,6 +363,7 @@ export default function CreateBulkUrlPage() {
                       control={control}
                       render={({ field }) => (
                         <Select
+                          {...field}
                           className="react-select-container"
                           classNamePrefix="react-select"
                         />
@@ -364,20 +405,11 @@ export default function CreateBulkUrlPage() {
         </form>
       </div>
 
-      <Modal
-        title="Upload files"
-        isOpen={uploadModal}
-        onClose={() => setUploadModal(false)}
-      >
-        <div className="space-y-4">
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-            <h3 className="font-medium">Drop files here</h3>
-            <p className="text-sm text-gray-500 mt-1">Supported format: CSV.</p>
-            <div className="my-2 text-sm text-gray-500">OR</div>
-            <Button>Browse files</Button>
-          </div>
-        </div>
-      </Modal>
+      <UploadCSVModal 
+  isOpen={uploadModal} 
+  setIsOpen={setUploadModal}
+  onDataUpload={handleCSVDataUpload}
+/>
 
       <QrCodeModal
         isOpen={showQrModal}
@@ -385,8 +417,7 @@ export default function CreateBulkUrlPage() {
           setShowQrModal(false);
           navigate("/short-urls");
         }}
-        url={watch("url")}
-        templateId={watch("qrTemplate")}
+        // url={watch("url") ?? ""}
       />
     </div>
   );

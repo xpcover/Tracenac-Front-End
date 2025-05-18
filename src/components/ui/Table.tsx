@@ -15,7 +15,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useQuery } from "@tanstack/react-query";
 import { dataTableService } from "@/services/dataTable.service";
-import { setTableData, tableState } from "@/redux/slices/dataTableSlice";
+import { setTableData } from "@/redux/slices/dataTableSlice";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -45,6 +45,9 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [search, setSearch] = useState("");
+
+
+  const userRole = localStorage.getItem("userRole");
 
   const [{ pageIndex, pageSize }, setPagination] = useState({
     pageIndex: 0,

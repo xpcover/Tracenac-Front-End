@@ -5,7 +5,7 @@ import { createColumnHelper } from '@tanstack/react-table'
 import { Copy, QrCode, Plus } from 'lucide-react'
 import { DataTable } from '@/components/ui/Table'
 import { PageHeader } from '@/components/ui/PageHeader'
-import { QrCodeModal } from './QrCodeModal'
+import { QrCodeModal } from '../../components/modals/QrCodeModal'
 
 interface ShortUrl {
   id: string
