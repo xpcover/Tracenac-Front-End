@@ -18,9 +18,10 @@ type RoleFormData = z.infer<typeof roleSchema>
 interface RoleFormProps {
   role?: Role | null
   setIsModalOpen: (arg: boolean) => void
+  viewRole?: Role | null
 }
 
-export default function RoleForm({ role, setIsModalOpen }: RoleFormProps) {
+export default function RoleForm({ role, setIsModalOpen, viewRole }: RoleFormProps) {
   const {
     register,
     handleSubmit,
@@ -28,8 +29,8 @@ export default function RoleForm({ role, setIsModalOpen }: RoleFormProps) {
   } = useForm<RoleFormData>({
     resolver: zodResolver(roleSchema),
     defaultValues: {
-      name: role?.name || '',
-      description: role?.description || '',
+      name: role?.name || viewRole?.name || '',
+      description: role?.description || viewRole?.description || '',
     },
   })
 
@@ -99,9 +100,11 @@ export default function RoleForm({ role, setIsModalOpen }: RoleFormProps) {
         )}
       </div>
 
-      <div className="flex justify-end gap-2">
-        <Button type="submit">Save Role</Button>
-      </div>
+      {!viewRole && (
+              <div className="flex justify-end gap-2">
+              <Button type="submit">Save Role</Button>
+            </div>
+      )}
     </form>
   )
 }

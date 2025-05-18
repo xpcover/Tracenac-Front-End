@@ -59,6 +59,7 @@ export default function PartnerPage(){
   const [isModalOpen, setIsModalOpen] = useState(false)
   // const [partners, setEditPartner] = useState<Partner[]>([]);
   const [editingPartner, setEditingPartner] = useState<Partner | null>(null)
+  const [viewPartner, setViewPartner] = useState<Partner | null>(null)
 
 
   const queryClient = useQueryClient();
@@ -76,6 +77,11 @@ export default function PartnerPage(){
 
   const handleEdit = (department: Partner) => {
     setEditingPartner(department)
+    setIsModalOpen(true)
+  }
+
+  const handleView = (department: Partner) => {
+    setViewPartner(department)
     setIsModalOpen(true)
   }
 
@@ -137,18 +143,29 @@ export default function PartnerPage(){
       url="/partner/"
       onEdit={handleEdit}
       onDelete={handleDelete}
-       />
+      onView={handleView}
+      />
+      
       <Modal 
         isOpen={isModalOpen} 
         onClose={() => {
           setIsModalOpen(false) 
           setEditingPartner(null)
+          setViewPartner(null)
         }}
-        title={editingPartner ? 'Edit Role' : 'Add Role'}
+        title={
+          viewPartner
+            ? 'View Partner' // 👈 Set title for view mode
+            : editingPartner
+            ? 'Edit Partner'
+            : 'Add Partner'
+        }
       >
 
       <PartnerForm
+        // partner={{editingPartner,viewPartner}}
         partner={editingPartner}
+        viewPartner = {viewPartner}
         users={users}
         setIsModalOpen={setIsModalOpen}
       />

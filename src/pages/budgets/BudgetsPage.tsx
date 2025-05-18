@@ -74,6 +74,7 @@ const columns = [
 export default function BudgetsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null)
+  const [viewBudget, setViewBudget] = useState<Budget | null>(null)
 
   const queryClient = useQueryClient();
 
@@ -97,6 +98,11 @@ export default function BudgetsPage() {
     deleteMutation.mutate(`/department/budget/${budget?._id}`)
   }
 
+  const handleView = (budget:Budget) =>{
+    setViewBudget(budget)
+    setIsModalOpen(true)
+  }
+
   return (
     <div>
       <PageHeader
@@ -113,6 +119,7 @@ export default function BudgetsPage() {
         url="/department/budget"
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onView={handleView}
       />
 
       <Modal
@@ -120,11 +127,19 @@ export default function BudgetsPage() {
         onClose={() => {
           setIsModalOpen(false)
           setEditingBudget(null)
+          setViewBudget(null)
         }}
-        title={editingBudget ? 'Edit Budget' : 'Add Budget'}
+        title={
+          viewBudget
+            ? 'View Budget' // 👈 Set title for view mode
+            : editingBudget
+            ? 'Edit Budget'
+            : 'Add Budget'
+        }
       >
         <BudgetForm
           budget={editingBudget}
+          viewBudget = {viewBudget}
           setIsModalOpen={setIsModalOpen}
         />
       </Modal>

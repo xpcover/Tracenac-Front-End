@@ -36,6 +36,7 @@ const columns = [
 export default function CostCentresPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingCostCentre, setEditingCostCentre] = useState<CostCentre | null>(null)
+  const [viewCostCentre, setViewCostCentre] = useState<CostCentre | null>(null)
 
   const queryClient = useQueryClient();
 
@@ -59,6 +60,11 @@ export default function CostCentresPage() {
     deleteMutation.mutate(`/department/cost-center/${costCenter?._id}`)
   }
   
+  const handleView = (costCentre: CostCentre) => {
+    setViewCostCentre(costCentre)
+    setIsModalOpen(true)
+  }
+
   return (
     <div>
       <PageHeader
@@ -75,18 +81,27 @@ export default function CostCentresPage() {
         url="/department/cost-center"
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onView = {handleView}
       />
       <Modal
         isOpen={isModalOpen}
         onClose={() => {
           setIsModalOpen(false)
           setEditingCostCentre(null)
+          setViewCostCentre(null)
         }}
-        title={editingCostCentre ? 'Edit Cost Centre' : 'Add Cost Centre'}
+        title={
+          viewCostCentre
+            ? 'View Cost Center' // 👈 Set title for view mode
+            : editingCostCentre
+            ? 'Edit Cost Center'
+            : 'Add Cost Center'
+        }
       >
         <CostCentreForm
           costCentre={editingCostCentre}
           setIsModalOpen={setIsModalOpen}
+          viewCostCentre={viewCostCentre}
         />
       </Modal>
     </div>

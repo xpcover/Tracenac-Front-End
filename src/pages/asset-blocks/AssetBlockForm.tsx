@@ -20,12 +20,14 @@ type BlockFormData = z.infer<typeof blockSchema>
 
 interface AssetBlockFormProps {
   block?: AssetBlock | null
+  viewBlock?: AssetBlock | null
   setIsModalOpen: (arg: boolean) => void
 }
 
 export default function AssetBlockForm({
   block,
   setIsModalOpen,
+  viewBlock
 }: AssetBlockFormProps) {
   const {
     register,
@@ -35,10 +37,10 @@ export default function AssetBlockForm({
   } = useForm<BlockFormData>({
     resolver: zodResolver(blockSchema),
     defaultValues: {
-      block_name: block?.block_name || '',
-      description: block?.description || '',
-      latitude: block?.latitude || '',
-      longitude: block?.longitude || '',
+      block_name: block?.blockName || viewBlock?.blockName || '',
+      description: block?.description || viewBlock?.description || '',
+      latitude: block?.location.latitude || viewBlock?.location.latitude || '',
+      longitude: block?.location.longitude || viewBlock?.location.longitude || '',
     },
   })
 
@@ -185,13 +187,14 @@ export default function AssetBlockForm({
           </p>
         )}
       </div>
-
-      <div className="flex justify-end gap-2">
-        <Button type="button" onClick={handleGetLocation}>
-          Get Location
-        </Button>
-        <Button type="submit">Save Block</Button>
-      </div>
+      {!viewBlock && (
+              <div className="flex justify-end gap-2">
+              <Button type="button" onClick={handleGetLocation}>
+                Get Location
+              </Button>
+              <Button type="submit">Save Block</Button>
+            </div>
+      )}
     </form>
   )
 }

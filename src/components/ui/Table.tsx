@@ -46,9 +46,6 @@ export function DataTable<TData, TValue>({
   const [sorting, setSorting] = useState<SortingState>([]);
   const [search, setSearch] = useState("");
 
-
-  const userRole = localStorage.getItem("userRole");
-
   const [{ pageIndex, pageSize }, setPagination] = useState({
     pageIndex: 0,
     pageSize: 10,
@@ -133,7 +130,7 @@ export function DataTable<TData, TValue>({
       <div className="rounded-md border">
         <table className="w-full">
           <thead>
-            {table.getHeaderGroups().map((headerGroup) => (
+          {[...table.getHeaderGroups()].reverse().map((headerGroup) => (
               <tr
                 key={headerGroup.id}
                 className="border-b bg-gray-50 transition-colors"
@@ -162,7 +159,7 @@ export function DataTable<TData, TValue>({
             ))}
           </thead>
           <tbody>
-          {table.getRowModel().rows.map((row) => (
+          {[...table.getRowModel().rows].reverse().map((row) => (
   <tr key={row.id} className="border-b">
     {row.getVisibleCells().map((cell) => (
       <td key={cell.id} className="p-4">

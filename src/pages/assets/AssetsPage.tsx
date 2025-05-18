@@ -119,6 +119,9 @@ export default function AssetsPage() {
     deleteMutation.mutate(`/assets/${asset?.assetId}`)
   }
 
+
+  
+
   
   const handleAssetClick = (asset: Asset) => {
     navigate(`/assets/${asset?.assetId}`)

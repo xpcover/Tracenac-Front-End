@@ -17,11 +17,13 @@ type CostCentreFormData = z.infer<typeof costCentreSchema>
 
 interface CostCentreFormProps {
   costCentre?: CostCentre | null
+  viewCostCentre?: CostCentre | null
   setIsModalOpen: (arg: boolean) => void
 }
 
 export default function CostCentreForm({
   costCentre,
+  viewCostCentre,
   setIsModalOpen,
 }: CostCentreFormProps) {
   const {
@@ -31,8 +33,8 @@ export default function CostCentreForm({
   } = useForm<CostCentreFormData>({
     resolver: zodResolver(costCentreSchema),
     defaultValues: {
-      costCentreName: costCentre?.costCentreName || '',
-      description: costCentre?.description || '',
+      costCentreName: costCentre?.costCentreName || viewCostCentre?.costCentreName ||'',
+      description: costCentre?.description || viewCostCentre?.description ||'',
     },
   })
 
@@ -117,10 +119,11 @@ export default function CostCentreForm({
           </p>
         )}
       </div>
-
-      <div className="flex justify-end gap-2">
-        <Button type="submit">Save Cost Centre</Button>
-      </div>
+      {!viewCostCentre && (
+          <div className="flex justify-end gap-2">
+              <Button type="submit">Save Cost Centre</Button>
+        </div>
+      )}
     </form>
   )
 }

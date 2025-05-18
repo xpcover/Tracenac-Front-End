@@ -39,7 +39,7 @@ const columns = [
 export default function AssetCategoriesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<AssetCategory | null>(null)
-
+  const [viewCategory,setViewCategory] = useState<AssetCategory | null>(null)
 
   const handleEdit = (category: AssetCategory) => {
     setEditingCategory(category)
@@ -58,6 +58,11 @@ export default function AssetCategoriesPage() {
       console.error('Error deleting asset category:', error);
     }
   });
+
+    const handleView = (block: AssetCategory) => {
+      setViewCategory(block)
+      setIsModalOpen(true)
+    }
 
 
   const handleDelete = (category: AssetCategory) => {
@@ -80,6 +85,7 @@ export default function AssetCategoriesPage() {
         columns={columns}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onView = {handleView}
       />
 
       <Modal
@@ -87,12 +93,20 @@ export default function AssetCategoriesPage() {
         onClose={() => {
           setIsModalOpen(false)
           setEditingCategory(null)
+          setViewCategory(null)
         }}
-        title={editingCategory ? 'Edit Category' : 'Add Category'}
+        title={
+          viewCategory
+            ? 'View Category' // 👈 Set title for view mode
+            : editingCategory
+            ? 'Edit Category'
+            : 'Add Category'
+        }
       >
         <AssetCategoryForm
           category={editingCategory}
           setIsModalOpen={setIsModalOpen}
+          viewCategory={viewCategory}
         />
       </Modal>
     </div>

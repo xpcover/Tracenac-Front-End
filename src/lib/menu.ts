@@ -149,16 +149,16 @@ export const menuItems: MenuItem[] = [
     requiredPermissions:['VIEW_MANAGE_ASSETS'],
     children: [
       {
-        icon: Boxes,
-        label: 'Asset Categories',
-        to: '/asset-categories',
-        requiredPermissions: ['VIEW_ASSET_CATEGORIES']
-      },
-      {
         icon: Box,
         label: 'Assets',
         to: '/assets',
         requiredPermissions: ['VIEW_ASSETS']
+      },
+      {
+        icon: Boxes,
+        label: 'Asset Categories',
+        to: '/asset-categories',
+        requiredPermissions: ['VIEW_ASSET_CATEGORIES']
       },
       {
         icon: Puzzle,
@@ -216,12 +216,12 @@ export const menuItems: MenuItem[] = [
         to: '/budgets',
         requiredPermissions: ['VIEW_BUDGETS']
       },
-      {
-        icon: Currency,
-        label: 'Forex Rates',
-        to: '/forex-rates',
-        requiredPermissions: ['VIEW_FOREX']
-      }
+      // {
+      //   icon: Currency,
+      //   label: 'Forex Rates',
+      //   to: '/forex-rates',
+      //   requiredPermissions: ['VIEW_FOREX']
+      // }
     ]
   },
   { 
@@ -230,12 +230,12 @@ export const menuItems: MenuItem[] = [
     to: '/settings',
     requiredPermissions: ['VIEW_SETTINGS'],
     children: [
-      {
-        icon: Users,
-        label: 'Partners',
-        to: '/partner',
-        requiredPermissions: ['VIEW_USERS']
-      },
+      // {
+      //   icon: Users,
+      //   label: 'Partners',
+      //   to: '/partner',
+      //   requiredPermissions: ['VIEW_USERS']
+      // },
       {
         icon: Users,
         label: 'Partners List',
@@ -265,6 +265,12 @@ export const menuItems: MenuItem[] = [
         label: 'Report Permissions',
         to: '/report-permissions',
         requiredPermissions: ['VIEW_REPORT_PERMISSIONS']
+      },
+      {
+        icon: ShieldCheck,
+        label: 'Configuration',
+        to: '/configuration',
+        requiredPermissions: ['VIEW_CONFIGURATION']
       }
     ]
   },

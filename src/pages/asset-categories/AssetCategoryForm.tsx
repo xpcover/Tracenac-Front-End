@@ -18,11 +18,13 @@ type CategoryFormData = z.infer<typeof categorySchema>
 interface AssetCategoryFormProps {
   category?: AssetCategory | null,
   setIsModalOpen: (arg:boolean) => void
+  viewCategory?: AssetCategory | null
 }
 
 export default function AssetCategoryForm({
   category,
-  setIsModalOpen
+  setIsModalOpen,
+  viewCategory
 }: AssetCategoryFormProps) {
   const {
     register,
@@ -31,8 +33,8 @@ export default function AssetCategoryForm({
   } = useForm<CategoryFormData>({
     resolver: zodResolver(categorySchema),
     defaultValues: {
-      category_name: category?.category_name || '',
-      description: category?.description || '',
+      category_name: category?.category_name || viewCategory?.category_name || '',
+      description: category?.description || viewCategory?.description || '',
     },
   })
 
@@ -114,9 +116,11 @@ export default function AssetCategoryForm({
         )}
       </div>
 
-      <div className="flex justify-end gap-2">
-        <Button type="submit">Save Category</Button>
-      </div>
+      {!viewCategory && (
+              <div className="flex justify-end gap-2">
+              <Button type="submit">Save Category</Button>
+            </div>
+      )}
     </form>
   )
 }
