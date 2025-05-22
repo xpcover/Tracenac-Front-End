@@ -1,17 +1,17 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
+import { ReactNode } from 'react';
+import { useSelector } from 'react-redux';
+import { PATHS } from '@/constants/paths';
 
-const RequireAuth = ({ children }: { children: JSX.Element }) => {
-  const navigate = useNavigate();
+const RequireAuth = ({ children }: { children: ReactNode }) => {
+  const { isAuthenticated } = useSelector((state) => state.auth);
+  const location = useLocation();
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/tenant-logIn');
-    }
-  }, [navigate]);
+  if (!isAuthenticated) {
+    return <Navigate to={PATHS.PUBLIC.LOGIN} state={{ from: location }} replace />;
+  }
 
-  return children;
+  return <>{children}</>;
 };
-
+ 
 export default RequireAuth;

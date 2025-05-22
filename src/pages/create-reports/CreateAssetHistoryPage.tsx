@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import axios from 'axios'
-import Select from 'react-select'
+import { axiosInstance } from '@/config/axiosInstance'
 
 interface Field {
   id: string
@@ -44,6 +44,7 @@ export default function CreateAssetHistoryPage() {
   const [latitude, setLatitude] = useState<number | null>(null)
   const [longitude, setLongitude] = useState<number | null>(null)
   const [assetId, setAssetId] = useState('')
+  const [assets,setAssets]= useState([])
   const [changeType, setChangeType] = useState('')
   const [details, setDetails] = useState('')
   const [date, setDate] = useState('')
@@ -62,6 +63,7 @@ export default function CreateAssetHistoryPage() {
 
   useEffect(() => {
     fetchReportTemplates()
+    fetchAssets()
   }, [])
 
   useEffect(() => {
@@ -95,6 +97,30 @@ export default function CreateAssetHistoryPage() {
     }
   }
 
+
+  const fetchAssets = async () => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      console.error('No token found')
+      return
+    }
+
+    try {
+      const response = await axiosInstance.get('/assets', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      const data = response.data.msg
+      setAssets(data) 
+    } catch (error) {
+      console.error('Error fetching report templates:', error)
+    }
+  }
+
+  console.log("Asset", assetId)
+
   const fetchUsers = async () => {
     const token = localStorage.getItem('token')
     if (!token) {
@@ -122,11 +148,18 @@ export default function CreateAssetHistoryPage() {
 
   const handleReportTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const reportTemplateId = e.target.value
+    // const assetId = e.target.value
+    // setSelectedAssetId(assetId)
     setSelectedReportTemplate(reportTemplateId)
     const reportTemplate = reportTemplates.find(rt => rt._id === reportTemplateId)
     setReasonFields(reportTemplate ? reportTemplate.reason.fields : [])
     setSystemGeneratedFields(reportTemplate.reason.systemGeneratedFields)
 
+  }
+
+  const handleAssetId = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const assetId = e.target.value
+    setAssetId(assetId)
   }
 
   const handleSystemFieldSearch = async (collection: string, query: string, apiEndpoint: string) => {
@@ -243,11 +276,8 @@ export default function CreateAssetHistoryPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Create Report"
-        description="Record new report entry"
-      >
-        <Button variant="ghost" onClick={() => navigate('/asset-history')}>
+      <PageHeader title="Create Report" description="Record new report entry">
+        <Button variant="ghost" onClick={() => navigate("/asset-history")}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Reports
         </Button>
@@ -261,138 +291,166 @@ export default function CreateAssetHistoryPage() {
                 <label className="block text-sm font-medium text-gray-700">
                   Asset ID
                 </label>
-                <Input
+                <select
+                  required
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  value={assetId}
+                  onChange={handleAssetId} // ✅ correct place
+                >
+                  <option value="">Select an asset</option>
+                  {assets.map((asset) => (
+                    <option key={asset._id} value={asset.assetId}>
+                      {asset.assetId}
+                    </option>
+                  ))}
+                </select>
+                {/* <Input
                   type="text"
                   required
                   placeholder="Enter Asset ID"
                   className="mt-1"
                   value={assetId}
                   onChange={(e) => setAssetId(e.target.value)}
-                />
+                /> */}
               </div>
               <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Report Template
-              </label>
-              <select
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                value={selectedReportTemplate}
-                onChange={handleReportTemplateChange}
-              >
-                <option value="">Select a report template</option>
-                {reportTemplates.map(template => (
-                  <option key={template._id} value={template._id}>
-                    {template.name}
-                  </option>
-                ))}
-              </select>
+                <label className="block text-sm font-medium text-gray-700">
+                  Report Template
+                </label>
+                <select
+                  required
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  value={selectedReportTemplate}
+                  onChange={handleReportTemplateChange}
+                >
+                  <option value="">Select a report template</option>
+                  {reportTemplates.map((template) => (
+                    <option key={template._id} value={template.name}>
+                      {template.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-            </div>
 
-
-           
-
-           
-
-            {reasonFields.map(field => (
+            {reasonFields.map((field) => (
               <div key={field.id} className="mt-4">
                 <label className="block text-sm font-medium text-gray-700">
                   {field.name}
                 </label>
-                {field.type === 'text' && (
+                {field.type === "text" && (
                   <Input
                     type="text"
                     className="mt-1"
                     placeholder={`Enter ${field.name}`}
-                    value={dynamicFieldValues[field.id] || ''}
-                    onChange={(e) => handleDynamicFieldChange(field.id, e.target.value)}
+                    value={dynamicFieldValues[field.id] || ""}
+                    onChange={(e) =>
+                      handleDynamicFieldChange(field.id, e.target.value)
+                    }
                   />
                 )}
-                {field.type === 'number' && (
+                {field.type === "number" && (
                   <Input
                     type="number"
                     className="mt-1"
                     placeholder={`Enter ${field.name}`}
-                    value={dynamicFieldValues[field.id] || ''}
-                    onChange={(e) => handleDynamicFieldChange(field.id, e.target.value)}
+                    value={dynamicFieldValues[field.id] || ""}
+                    onChange={(e) =>
+                      handleDynamicFieldChange(field.id, e.target.value)
+                    }
                   />
                 )}
-                {field.type === 'select' && (
+                {field.type === "select" && (
                   <select
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    value={dynamicFieldValues[field.id] || ''}
-                    onChange={(e) => handleDynamicFieldChange(field.id, e.target.value)}
+                    value={dynamicFieldValues[field.id] || ""}
+                    onChange={(e) =>
+                      handleDynamicFieldChange(field.id, e.target.value)
+                    }
                   >
-                    {field.options?.map(option => (
+                    {field.options?.map((option) => (
                       <option key={option} value={option}>
                         {option}
                       </option>
                     ))}
                   </select>
                 )}
-                {field.type === 'upload' && (
+                {field.type === "upload" && (
                   <input
                     type="file"
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    onChange={(e) => handleDynamicFieldChange(field.id, e.target.files?.[0])}
+                    onChange={(e) =>
+                      handleDynamicFieldChange(field.id, e.target.files?.[0])
+                    }
                   />
                 )}
-                {field.type === 'date' && (
+                {field.type === "date" && (
                   <Input
                     type="date"
                     className="mt-1"
                     placeholder={`Enter ${field.name}`}
-                    value={dynamicFieldValues[field.id] || ''}
-                    onChange={(e) => handleDynamicFieldChange(field.id, e.target.value)}
+                    value={dynamicFieldValues[field.id] || ""}
+                    onChange={(e) =>
+                      handleDynamicFieldChange(field.id, e.target.value)
+                    }
                   />
                 )}
               </div>
             ))}
 
-{systemGeneratedFields.map(field => (
-  <div key={field.collection} className="mt-4">
-    <label className="block text-sm font-medium text-gray-700">{field.collection}</label>
-    {/* Combined search and dropdown using <datalist> */}
-    <input
-      type="text"
-      list={`${field.collection}-options`}
-      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-      placeholder={`Search ${field.fields[0]}`}
-      onChange={(e) => {
-        const selectedValue = e.target.value
-        const selectedOption = systemFieldOptions[field.collection]?.find(
-          option => option.value === selectedValue
-        )
-        handleSystemFieldSelect(field.collection, selectedOption)
-      }}
-      onInput={(e) =>
-        handleSystemFieldSearch(field.collection, e.target.value, field.apiEndpoint)
-      }
-    />
-    <datalist id={`${field.collection}-options`}>
-      {systemFieldOptions[field.collection]?.map(option => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </datalist>
+            {systemGeneratedFields.map((field) => (
+              <div key={field.collection} className="mt-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  {field.collection}
+                </label>
+                {/* Combined search and dropdown using <datalist> */}
+                <input
+                  type="text"
+                  list={`${field.collection}-options`}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  placeholder={`Search ${field.fields[0]}`}
+                  onChange={(e) => {
+                    const selectedValue = e.target.value;
+                    const selectedOption = systemFieldOptions[
+                      field.collection
+                    ]?.find((option) => option.value === selectedValue);
+                    handleSystemFieldSelect(field.collection, selectedOption);
+                  }}
+                  onInput={(e) =>
+                    handleSystemFieldSearch(
+                      field.collection,
+                      e.target.value,
+                      field.apiEndpoint
+                    )
+                  }
+                />
+                <datalist id={`${field.collection}-options`}>
+                  {systemFieldOptions[field.collection]?.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </datalist>
 
-    {/* Render remaining fields */}
-    {field.fields.slice(1).map(subField => (
-      <div key={subField} className="mt-2">
-        <label className="block text-sm font-medium text-gray-700">{subField}</label>
-        <input
-          type="text"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          placeholder={`Enter ${subField}`}
-          value={systemFieldValues[field.collection]?.[subField] || ''}
-          readOnly // Make related fields read-only
-        />
-      </div>
-    ))}
-  </div>
-))}
+                {/* Render remaining fields */}
+                {field.fields.slice(1).map((subField) => (
+                  <div key={subField} className="mt-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      {subField}
+                    </label>
+                    <input
+                      type="text"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      placeholder={`Enter ${subField}`}
+                      value={
+                        systemFieldValues[field.collection]?.[subField] || ""
+                      }
+                      readOnly // Make related fields read-only
+                    />
+                  </div>
+                ))}
+              </div>
+            ))}
 
             <div className="flex items-center gap-2 mb-4">
               <input
@@ -420,7 +478,7 @@ export default function CreateAssetHistoryPage() {
                     type="number"
                     step="any"
                     className="mt-1"
-                    value={latitude ?? ''}
+                    value={latitude ?? ""}
                     readOnly
                   />
                 </div>
@@ -432,7 +490,7 @@ export default function CreateAssetHistoryPage() {
                     type="number"
                     step="any"
                     className="mt-1"
-                    value={longitude ?? ''}
+                    value={longitude ?? ""}
                     readOnly
                   />
                 </div>
@@ -487,8 +545,8 @@ export default function CreateAssetHistoryPage() {
                   onChange={(e) => setSelectedUser(e.target.value)}
                 >
                   <option value="">Select a user</option>
-                  {users.map(user => (
-                    <option key={user.id} value={user.id}>
+                  {users.map((user) => (
+                    <option key={user.id} value={user.name}>
                       {user.name}
                     </option>
                   ))}
@@ -500,7 +558,7 @@ export default function CreateAssetHistoryPage() {
               <Button
                 type="button"
                 variant="secondary"
-                onClick={() => navigate('/asset-history')}
+                onClick={() => navigate("/asset-history")}
               >
                 Cancel
               </Button>
@@ -510,5 +568,5 @@ export default function CreateAssetHistoryPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

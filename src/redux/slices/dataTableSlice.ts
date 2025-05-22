@@ -1,4 +1,4 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 interface itemType {
   id: number
@@ -21,8 +21,8 @@ export const dataTableSlice = createSlice({
   name: 'dataTable',
   initialState,
   reducers: {
-    setLoading: (state, action) => { state.loading = action.payload },
-    setTableData: (state, action) => { state.data = action.payload },
+    setLoading: (state, action: PayloadAction<boolean>) => { state.loading = action.payload },
+    setTableData: (state, action: PayloadAction<itemType[]>) => { state.data = action.payload },
     setPagination: (state, action) => { state.pagination = action.payload },
     clearData: (state) => { state.data = [] },
     createData: (state, action) => { state.data.push(action.payload) },
@@ -33,4 +33,4 @@ export const dataTableSlice = createSlice({
 
 export const { setLoading, setTableData, setPagination, clearData, createData, updateData, deleteData } = dataTableSlice.actions
 
-export default dataTableSlice.reducer
+export default dataTableSlice

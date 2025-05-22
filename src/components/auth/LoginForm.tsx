@@ -1,55 +1,69 @@
-import { FormEvent, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import {  Lock, User } from 'lucide-react';
+import { Lock, User } from 'lucide-react';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
+import ApiService from '@/services/api.service';
+import toast from 'react-hot-toast';
+import { useDispatch, useSelector } from 'react-redux';
+import { setUserInfo } from '@/redux/slices/authSlice';
+import Cookies from 'js-cookie';
+import { ErrorMessage } from '../ui/ErrorMessage';
+import Select from 'react-select';
+import { useEffect } from 'react';
+
+// Zod validation schema
+const loginSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  role: z.number().default(1),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginForm() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+  
+  const {
+    register,
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
   });
-  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setError(null);
+  const { isAuthenticated } = useSelector((state) => state.auth);
+  const dispatch = useDispatch()
 
-    try {
-      const response = await fetch('https://api.tracenac.com/api/admin/superadmin-login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
-      });
+  useEffect(()=>{
+    if(isAuthenticated){
+      navigate('/dashboard')
+    } 
+  },[navigate, isAuthenticated])
 
-      if (!response.ok) {
-        throw new Error('Authentication failed');
-      }
+  const mutation= useMutation({
+    mutationFn: (data: LoginFormData) => ApiService.post(data.role === 1 ? '/tenant/authenticate ' : '/user/auth', data),
 
-      const data = await response.json();
-      console.log('Authentication successful:', data);
-
-      // Save response data in local storage
-      localStorage.setItem('user',JSON.stringify(data.msg));
-
-      localStorage.setItem('tenantId', data.msg.tenantId);
-      localStorage.setItem('userId', data.msg.id);
-      localStorage.setItem('userRole', data.msg.userRole);
-      localStorage.setItem('email', data.msg.email);
-      localStorage.setItem('token', data.msg.token);
-
-      // Navigate to the dashboard on successful authentication
+    onSuccess: (response) => {
+      const { data } = response;
+      dispatch(setUserInfo(data?.msg))
+      Cookies.set('token', data?.msg?.token);
+      toast.success('Login successful');
       navigate('/dashboard');
-    } catch (error) {
-      console.error('Error during authentication:', error);
-      setError('Authentication failed. Please check your credentials and try again.');
-    }
+    },
+
+    onError: (error) => {
+      console.error('Login error:', error);
+      toast.error(error.message);
+    },
+  });
+
+  const onSubmit = (data: LoginFormData) => {
+    mutation.mutate(data);
   };
 
   return (
@@ -60,7 +74,8 @@ export default function LoginForm() {
             Sign in to your account
           </h2>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="rounded-md shadow-sm space-y-4">
             <div className="relative">
               <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
@@ -68,29 +83,49 @@ export default function LoginForm() {
                 type="email"
                 placeholder="Email"
                 className="pl-10"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
+                {...register('email')}
+                error={errors.email}
               />
+              <ErrorMessage>{errors.email?.message}</ErrorMessage>
             </div>
+            
             <div className="relative">
               <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
               <Input
                 type="password"
                 placeholder="Password"
                 className="pl-10"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
+                {...register('password')}
+                error={errors.password}
               />
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+              )}
             </div>
+
+            <Controller
+                name="role"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    classNamePrefix="react-select"
+                    onChange={(selected) => field.onChange(selected?.value)}
+                    options={[
+                      { value: 1, label: 'Tenant User' },
+                      { value: 2, label: 'Admin' },
+                    ]}
+                    placeholder="Select BU"
+                    isSearchable />
+                )}
+              />
           </div>
-          {error && <div className="text-red-500 text-center">{error}</div>}
           <div>
-            <Button type="submit" className="w-full">
-              Sign In
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={mutation.isPending}
+            >
+              {mutation.isPending ? 'Signing in...' : 'Sign In'}
             </Button>
           </div>
         </form>

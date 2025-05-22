@@ -38,6 +38,7 @@ const columns = [
 export default function AssetBlocksPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingBlock, setEditingBlock] = useState<AssetBlock | null>(null)
+  const [viewBlock,setViewBlock] = useState<AssetBlock | null>(null)
 
   const queryClient = useQueryClient();
 
@@ -54,6 +55,11 @@ export default function AssetBlocksPage() {
 
   const handleEdit = (block: AssetBlock) => {
     setEditingBlock(block)
+    setIsModalOpen(true)
+  }
+  
+  const handleView = (block:AssetBlock)=>{
+    setViewBlock(block)
     setIsModalOpen(true)
   }
 
@@ -77,6 +83,7 @@ export default function AssetBlocksPage() {
         url="/assets/block"
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onView = {handleView}
       />
 
       <Modal
@@ -84,12 +91,20 @@ export default function AssetBlocksPage() {
         onClose={() => {
           setIsModalOpen(false)
           setEditingBlock(null)
+          setViewBlock(null)
         }}
-        title={editingBlock ? 'Edit Block' : 'Add Block'}
+        title={
+          viewBlock
+            ? 'View Block' // 👈 Set title for view mode
+            : editingBlock
+            ? 'Edit Block'
+            : 'Add  Block'
+        }
       >
         <AssetBlockForm
           block={editingBlock}
           setIsModalOpen={setIsModalOpen}
+          viewBlock={viewBlock}
         />
       </Modal>
     </div>

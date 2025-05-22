@@ -59,16 +59,16 @@ const columns = [
       </span>
     ),
   }),
-  columnHelper.accessor("createdAt", {
-    header: "Created At",
-    cell: (info) => format(new Date(info.getValue()), "PP"),
-  }),
+  // columnHelper.accessor("createdAt", {
+  //   header: "Created At",
+  //   cell: (info) => format(new Date(info.getValue()), "PP"),
+  // }),
 ];
 
 export default function AssetComponentsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingComponent, setEditingComponent] =
-    useState<AssetComponent | null>(null);
+  const [editingComponent, setEditingComponent] = useState<AssetComponent | null>(null);
+  const [viewComponent,setViewComponent] = useState<AssetComponent | null>(null)
 
   const handleEdit = (component: AssetComponent) => {
     setEditingComponent(component);
@@ -77,6 +77,11 @@ export default function AssetComponentsPage() {
 
   const handleDelete = (component: AssetComponent) => {
     console.log("Delete component", component);
+  };
+
+  const handleView = (component: AssetComponent) => {
+    setViewComponent(component);
+    setIsModalOpen(true);
   };
   
 
@@ -96,6 +101,7 @@ export default function AssetComponentsPage() {
         url="/assets/components"
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onView= {handleView}
       />
 
       <Modal
@@ -103,12 +109,20 @@ export default function AssetComponentsPage() {
         onClose={() => {
           setIsModalOpen(false);
           setEditingComponent(null);
+          setViewComponent(null);
         }}
-        title={editingComponent ? "Edit Component" : "Add Component"}
+        title={
+          viewComponent
+            ? 'View Component' // 👈 Set title for view mode
+            : editingComponent
+            ? 'Edit Component'
+            : 'Add Component'
+        }
       >
         <AssetComponentForm
           component={editingComponent}
           setIsModalOpen={setIsModalOpen}
+          viewComponent={viewComponent}
         />
       </Modal>
     </div>

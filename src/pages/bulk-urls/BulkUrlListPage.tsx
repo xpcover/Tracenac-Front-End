@@ -5,7 +5,7 @@ import { createColumnHelper } from '@tanstack/react-table'
 import { Copy, QrCode, Plus } from 'lucide-react'
 import { DataTable } from '@/components/ui/Table'
 import { PageHeader } from '@/components/ui/PageHeader'
-import { QrCodeModal } from './QrCodeModal'
+import { QrCodeModal } from '../../components/modals/QrCodeModal'
 
 interface ShortUrl {
   id: string
@@ -24,7 +24,7 @@ const columnHelper = createColumnHelper<ShortUrl>()
 
 const columns = [
   columnHelper.accessor('shortUrl', {
-    header: 'Bulk URL',
+    header: 'Image',
     cell: (info) => (
       <div className="flex items-center gap-2">
         <Link
@@ -55,23 +55,15 @@ const columns = [
     ),
   }),
   columnHelper.accessor('longUrl', {
-    header: 'Original URL',
+    header: 'PO Code',
     cell: (info) => (
       <span className="truncate max-w-xs block" title={info.getValue()}>
         {info.getValue()}
       </span>
     ),
   }),
-  columnHelper.accessor('businessUnit', {
-    header: 'Business Unit',
-    cell: (info) => info.getValue(),
-  }),
-  columnHelper.accessor('location', {
-    header: 'Location',
-    cell: (info) => info.getValue(),
-  }),
   columnHelper.accessor('assetId', {
-    header: 'Asset',
+    header: 'Asset Id',
     cell: (info) => info.row.original.assetId ? (
       <div>
         <div className="font-medium">{info.getValue()}</div>
@@ -79,12 +71,24 @@ const columns = [
       </div>
     ) : '-',
   }),
+  columnHelper.accessor('businessUnit', {
+    header: 'Type',
+    cell: (info) => info.getValue(),
+  }),
+  columnHelper.accessor('location', {
+    header: 'Status',
+    cell: (info) => info.getValue(),
+  }),
+  columnHelper.accessor('location', {
+    header: 'Start Date',
+    cell: (info) => info.getValue(),
+  }),
   columnHelper.accessor('clicks', {
-    header: 'Clicks',
+    header: 'Valid Till',
     cell: (info) => info.getValue(),
   }),
   columnHelper.accessor('createdAt', {
-    header: 'Created At',
+    header: 'Total Scans',
     cell: (info) => format(new Date(info.getValue()), 'PPp'),
   }),
 ]

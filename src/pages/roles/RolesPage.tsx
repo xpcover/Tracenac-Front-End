@@ -35,7 +35,7 @@ const columns = [
 export default function RolesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingRole, setEditingRole] = useState<Role | null>(null)
-
+  const [viewRole, setViewRole] = useState<Role | null>(null)
   const queryClient = useQueryClient();
 
 
@@ -52,6 +52,11 @@ export default function RolesPage() {
 
   const handleEdit = (role: Role ) => {
     setEditingRole(role)
+    setIsModalOpen(true)
+  }
+
+  const handleView =(role:Role) =>{
+    setViewRole(role)
     setIsModalOpen(true)
   }
 
@@ -75,6 +80,7 @@ export default function RolesPage() {
         url="/tenant/roles"
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onView={handleView}
       />
 
       <Modal
@@ -82,12 +88,20 @@ export default function RolesPage() {
         onClose={() => {
           setIsModalOpen(false)
           setEditingRole(null)
+          setViewRole(null)
         }}
-        title={editingRole ? 'Edit Role' : 'Add Role'}
+        title={
+          viewRole
+            ? 'View Role' // 👈 Set title for view mode
+            : editingRole
+            ? 'Edit Role'
+            : 'Add  Role'
+        }
       >
         <RoleForm
           role={editingRole}
           setIsModalOpen={setIsModalOpen}
+          viewRole={viewRole}
         />
       </Modal>
     </div>

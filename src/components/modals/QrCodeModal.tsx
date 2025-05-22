@@ -8,7 +8,7 @@ import axios from "axios";
 interface QrCodeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  url: string;
+  url?: string;
   showCustomization?: boolean;
 }
 

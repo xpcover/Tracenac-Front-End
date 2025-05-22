@@ -44,6 +44,7 @@ const columns = [
 export default function LocationsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingLocation, setEditingLocation] = useState<Location | null>(null)
+  const [viewLocation, setViewLocation] = useState<Location | null>(null)
 
   const queryClient = useQueryClient();
 
@@ -68,6 +69,11 @@ export default function LocationsPage() {
     deleteMutation.mutate(`/department/location/${location?._id}`)
   }
 
+  const handleView = (location:Location) =>{
+    setViewLocation(location)
+    setIsModalOpen(true)
+  }
+
 
   return (
     <div>
@@ -85,6 +91,7 @@ export default function LocationsPage() {
         url="/department/location"
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onView = {handleView}
       />
 
       <Modal
@@ -92,13 +99,21 @@ export default function LocationsPage() {
         onClose={() => {
           setIsModalOpen(false)
           setEditingLocation(null)
+          setViewLocation(null)
         }}
-        title={editingLocation ? 'Edit Location' : 'Add Location'}
+        title={
+          viewLocation
+            ? 'View Location' // 👈 Set title for view mode
+            : editingLocation
+            ? 'Edit Location'
+            : 'Add Location'
+        }
       >
         
         <LocationForm
           location={editingLocation}
           setIsModalOpen={setIsModalOpen}
+          viewLocation = {viewLocation}
         />
       </Modal>
     </div>

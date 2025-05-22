@@ -19,11 +19,13 @@ type LocationFormData = z.infer<typeof locationSchema>
 
 interface LocationFormProps {
   location?: Location | null
+  viewLocation?: Location | null
   setIsModalOpen: (arg: boolean) => void
 }
 
 export default function LocationForm({
   location,
+  viewLocation,
   setIsModalOpen,
 }: LocationFormProps) {
   const {
@@ -33,10 +35,10 @@ export default function LocationForm({
   } = useForm<LocationFormData>({
     resolver: zodResolver(locationSchema),
     defaultValues: {
-      location_name: location?.location_name || '',
-      address: location?.address || '',
-      latitude: location?.latitude || 0,
-      longitude: location?.longitude || 0,
+      location_name: location?.location_name || viewLocation?.location_name ||'',
+      address: location?.address || viewLocation?.address ||'',
+      latitude: location?.latitude || viewLocation?.latitude||0,
+      longitude: location?.longitude || viewLocation?.longitude|| 0,
     },
   })
 
@@ -170,9 +172,11 @@ export default function LocationForm({
         </div>
       </div>
 
-      <div className="flex justify-end gap-2">
-        <Button type="submit">Save Location</Button>
-      </div>
+      {!viewLocation && (
+              <div className="flex justify-end gap-2">
+              <Button type="submit">Save Location</Button>
+            </div>
+      )}
     </form>
   )
 }
