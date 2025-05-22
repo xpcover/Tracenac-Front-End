@@ -1,6 +1,23 @@
 import { z } from 'zod'
 import { DivideIcon as LucideIcon } from 'lucide-react'
-import { te } from 'date-fns/locale'
+import { ReactNode } from 'react';
+import { IndexRouteProps, PathRouteProps, RouteProps } from 'react-router-dom';
+
+export type RouteConfig = {
+  path?: string;
+  element?: ReactNode;
+  children?: RouteConfig[];
+  index?: boolean;
+} & Omit<PathRouteProps | IndexRouteProps, 'path' | 'element' | 'children'>;
+
+export type PrivateRouteProps = {
+  children: ReactNode;
+};
+
+export type PrivateRoutesWithLayout = Omit<RouteProps, 'element' | 'children'> & {
+  element: ReactNode;
+  children: RouteConfig[];
+};
 
 // Base interfaces
 export interface MenuItem {

@@ -1,11 +1,12 @@
 import { InputHTMLAttributes, forwardRef } from 'react'
 import { cn } from '@/lib/utils'
 import { ErrorMessage } from './ErrorMessage'
+import { FieldError } from 'react-hook-form'
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   isEditable?: boolean
   label?: string
-  error?: string
+  error?: FieldError
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(

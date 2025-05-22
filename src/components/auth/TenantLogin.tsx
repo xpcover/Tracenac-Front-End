@@ -4,7 +4,7 @@ import {  Lock, User } from 'lucide-react';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 
-export default function LoginForm() {
+export default function TenantLoginForm() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',

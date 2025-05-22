@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
@@ -8,11 +8,18 @@ import Button from '../ui/Button';
 import Input from '../ui/Input';
 import ApiService from '@/services/api.service';
 import toast from 'react-hot-toast';
+import { useDispatch, useSelector } from 'react-redux';
+import { setUserInfo } from '@/redux/slices/authSlice';
+import Cookies from 'js-cookie';
+import { ErrorMessage } from '../ui/ErrorMessage';
+import Select from 'react-select';
+import { useEffect } from 'react';
 
 // Zod validation schema
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
+  role: z.number().default(1),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -22,39 +29,41 @@ export default function LoginForm() {
   
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
 
-  const { mutate: login, isPending } = useMutation({
-    mutationFn: (data: LoginFormData) =>
-      ApiService.post('/admin/superadmin-login', data),
+  const { isAuthenticated } = useSelector((state) => state.auth);
+  const dispatch = useDispatch()
+
+  useEffect(()=>{
+    if(isAuthenticated){
+      navigate('/dashboard')
+    } 
+  },[navigate, isAuthenticated])
+
+  const mutation= useMutation({
+    mutationFn: (data: LoginFormData) => ApiService.post(data.role === 1 ? '/tenant/authenticate ' : '/user/auth', data),
 
     onSuccess: (response) => {
       const { data } = response;
-
+      dispatch(setUserInfo(data?.msg))
+      Cookies.set('token', data?.msg?.token);
       toast.success('Login successful');
-      // Store user data
-      localStorage.setItem('user', JSON.stringify(data));
-      localStorage.setItem('tenantId', data?.tenantId || '');
-      localStorage.setItem('userId', data?.id);
-      localStorage.setItem('userRole', data?.userRole);
-      localStorage.setItem('email', data?.email);
-      localStorage.setItem('token', data?.token);
-
       navigate('/dashboard');
     },
 
-    onError: (error: any) => {
+    onError: (error) => {
       console.error('Login error:', error);
-      toast.error('Login failed');
+      toast.error(error.message);
     },
   });
 
   const onSubmit = (data: LoginFormData) => {
-    login(data);
+    mutation.mutate(data);
   };
 
   return (
@@ -75,10 +84,9 @@ export default function LoginForm() {
                 placeholder="Email"
                 className="pl-10"
                 {...register('email')}
+                error={errors.email}
               />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-              )}
+              <ErrorMessage>{errors.email?.message}</ErrorMessage>
             </div>
             
             <div className="relative">
@@ -88,19 +96,36 @@ export default function LoginForm() {
                 placeholder="Password"
                 className="pl-10"
                 {...register('password')}
+                error={errors.password}
               />
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
               )}
             </div>
+
+            <Controller
+                name="role"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    classNamePrefix="react-select"
+                    onChange={(selected) => field.onChange(selected?.value)}
+                    options={[
+                      { value: 1, label: 'Tenant User' },
+                      { value: 2, label: 'Admin' },
+                    ]}
+                    placeholder="Select BU"
+                    isSearchable />
+                )}
+              />
           </div>
           <div>
             <Button 
               type="submit" 
               className="w-full"
-              disabled={isPending}
+              disabled={mutation.isPending}
             >
-              {isPending ? 'Signing in...' : 'Sign In'}
+              {mutation.isPending ? 'Signing in...' : 'Sign In'}
             </Button>
           </div>
         </form>

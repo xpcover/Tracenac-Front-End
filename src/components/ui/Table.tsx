@@ -117,7 +117,7 @@ export function DataTable<TData, TValue>({
     meta,
   });
 
-  if (isLoading) return <h4>Loading...</h4>;
+   if (isLoading) return <h4>Loading...</h4>;
 
   return (
     <div className="space-y-4">
