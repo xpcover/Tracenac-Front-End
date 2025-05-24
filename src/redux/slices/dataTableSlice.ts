@@ -33,4 +33,4 @@ export const dataTableSlice = createSlice({
 
 export const { setLoading, setTableData, setPagination, clearData, createData, updateData, deleteData } = dataTableSlice.actions
 
-export default dataTableSlice
+export default dataTableSlice.reducer
