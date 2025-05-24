@@ -1,0 +1,32 @@
+name: Firebase Deploy
+
+on:
+  push:
+    branches:
+      - main  # Change to your desired deploy branch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'  # or the version you use
+
+      - name: Install dependencies
+        run: npm install -f
+
+      - name: Build React app
+        run: npm run build
+
+      - name: Deploy to Firebase Hosting
+        uses: w9jds/firebase-action@v13.0.0
+        with:
+          args: deploy --only hosting
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
