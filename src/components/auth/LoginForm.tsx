@@ -53,6 +53,7 @@ export default function LoginForm() {
       dispatch(setUserInfo(msg))
       Cookies.set('token', msg?.token);
       toast.success('Login successful');
+      window.location.reload();
       navigate('/dashboard');
     },
 
