@@ -6,6 +6,7 @@ import { PATHS } from '@/constants/paths';
 import { store } from '@/redux/store';
 import { privateRoutesWithLayout } from './privateRoutes';
 import NotFoundPage from '@/pages/404/NotFoundPage';
+import Loader from '@/components/ui/Loader';
 
 const LoginForm = lazy(() => import('@/components/auth/LoginForm'));
 
@@ -13,7 +14,7 @@ export function AllRoutes() {
   return (
     <Provider store={store}>
       <BrowserRouter>
-        <Suspense fallback={<h1>Loading...</h1>}>
+        <Suspense fallback={<Loader />}>
           <Routes>
             {/* Public Routes */}
             <Route path={PATHS.PUBLIC.LOGIN} element={<LoginForm />} />

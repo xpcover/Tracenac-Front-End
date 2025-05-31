@@ -52,14 +52,14 @@ export default function LoginForm() {
       const { msg } = response;
       dispatch(setUserInfo(msg))
       Cookies.set('token', msg?.token);
+      localStorage.setItem('token', msg?.token);
       toast.success('Login successful');
       window.location.reload();
       navigate('/dashboard');
     },
 
-    onError: (error) => {
-      console.error('Login error:', error);
-      toast.error(error.message);
+    onError: (error:any) => {
+      toast.error(error.response.data.err);
     },
   });
 
