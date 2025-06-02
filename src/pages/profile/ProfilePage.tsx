@@ -24,7 +24,7 @@ export default function ProfilePage() {
         <p className="text-gray-500">Profile page content coming soon...</p>
       </div>
 
-      <Button><LogOut className='w-4 mr-1' onClick={handleLogout}/>Logout</Button>
+      <Button onClick={handleLogout}><LogOut className='w-4 mr-1' />Logout</Button>
     </div>
   )
 }
