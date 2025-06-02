@@ -9,6 +9,7 @@ import NotFoundPage from '@/pages/404/NotFoundPage';
 import Loader from '@/components/ui/Loader';
 
 const LoginForm = lazy(() => import('@/components/auth/LoginForm'));
+const SuperAdminLoginForm = lazy(() => import('@/pages/superadmin/SuperAdminLogin'));
 
 export function AllRoutes() {
   return (
@@ -18,6 +19,7 @@ export function AllRoutes() {
           <Routes>
             {/* Public Routes */}
             <Route path={PATHS.PUBLIC.LOGIN} element={<LoginForm />} />
+            <Route path={PATHS.PUBLIC.ADMIN_LOGIN} element={<SuperAdminLoginForm />} />
 
             {/* Private Routes */}
             <Route

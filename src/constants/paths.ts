@@ -2,6 +2,7 @@
 export const PATHS = {
   PUBLIC: {
     LOGIN: '/login',
+    ADMIN_LOGIN: '/superadmin/login'
   },
   PRIVATE: {
     DASHBOARD: '/dashboard',

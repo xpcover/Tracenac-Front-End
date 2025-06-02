@@ -1,25 +1,23 @@
-import { Controller, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Lock, User } from 'lucide-react';
-import Button from '../ui/Button';
-import Input from '../ui/Input';
 import ApiService from '@/services/api.service';
 import toast from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
 import { setUserInfo } from '@/redux/slices/authSlice';
 import Cookies from 'js-cookie';
-import { ErrorMessage } from '../ui/ErrorMessage';
-import Select from 'react-select';
 import { useEffect } from 'react';
+import Input from '@/components/ui/Input';
+import { ErrorMessage } from '@/components/ui/ErrorMessage';
+import Button from '@/components/ui/Button';
 
 // Zod validation schema
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  role: z.number().default(1),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -29,7 +27,6 @@ export default function LoginForm() {
   
   const {
     register,
-    control,
     handleSubmit,
     formState: { errors },
   } = useForm<LoginFormData>({
@@ -46,7 +43,7 @@ export default function LoginForm() {
   },[navigate, isAuthenticated])
 
   const mutation= useMutation({
-    mutationFn: (data: LoginFormData) => ApiService.post(data.role === 1 ? '/tenant/authenticate ' : '/user/auth', data),
+    mutationFn: (data: LoginFormData) => ApiService.post('/admin/superadmin-login',data),
 
     onSuccess: (response) => {
       const { msg } = response;
@@ -54,7 +51,6 @@ export default function LoginForm() {
       Cookies.set('token', msg?.token);
       localStorage.setItem('token', msg?.token);
       toast.success('Login successful');
-      window.location.reload();
       navigate('/dashboard');
     },
 
@@ -103,22 +99,6 @@ export default function LoginForm() {
                 <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
               )}
             </div>
-
-            <Controller
-                name="role"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    classNamePrefix="react-select"
-                    onChange={(selected) => field.onChange(selected?.value)}
-                    options={[
-                      { value: 1, label: 'Tenant' },
-                      { value: 2, label: 'Employee' },
-                    ]}
-                    placeholder="Select Role"
-                    isSearchable />
-                )}
-              />
           </div>
           <div>
             <Button 
