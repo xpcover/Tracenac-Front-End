@@ -50,6 +50,7 @@ export default function LoginForm() {
       dispatch(setUserInfo(msg))
       Cookies.set('token', msg?.token);
       localStorage.setItem('token', msg?.token);
+      localStorage.setItem('userRole', 'admin');
       toast.success('Login successful');
       navigate('/dashboard');
     },

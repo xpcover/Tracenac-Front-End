@@ -11,12 +11,9 @@ export default function Sidebar() {
   const [expandedMenus, setExpandedMenus] = useState<string[]>([])
   const [isAdmin, setIsAdmin] = useState(false)
 
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user') || '{}')
-    type UserRole = { userRole: string }
-    const adminRole = user.roles?.find((role: UserRole) => role.userRole === 'admin')
-    setIsAdmin(!!adminRole)
-  }, [])
+ useEffect(() => {
+    setIsAdmin(localStorage.getItem('userRole') === 'admin')
+}, [])
 
   // Filter menu items based on user permissions
   const visibleMenuItems = menuItems.filter(item => {
@@ -105,16 +102,21 @@ export default function Sidebar() {
 
       <nav className="flex-1 overflow-y-auto p-2">
         <ul className="space-y-1">
-          {visibleMenuItems.map(item => (
-            <li key={item.to}>
-              {renderMenuItem(item)}
-            </li>
-          ))}
-          {isAdmin && admintems.map(item => (
-            <li key={item.to}>
-              {renderMenuItem(item)}
-            </li>
-          ))}
+          {isAdmin ? (
+      // Render admin menu items
+      admintems.map(item => (
+        <li key={item.to}>
+          {renderMenuItem(item)}
+        </li>
+      ))
+    ) : (
+      // Render regular menu items
+      visibleMenuItems.map(item => (
+        <li key={item.to}>
+          {renderMenuItem(item)}
+        </li>
+      ))
+    )}
         </ul>
       </nav>
     </div>
