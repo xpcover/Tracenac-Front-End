@@ -56,5 +56,6 @@ export const PATHS = {
       SHIFT_USAGE: '/create-reports/shift-usage',
     },
     ANALYZE_PACK: '/pack-chain',
+    SUBSCRIPTIONS: '/subscriptions'
   },
 } as const;

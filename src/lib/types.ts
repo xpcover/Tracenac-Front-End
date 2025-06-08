@@ -47,10 +47,14 @@ export interface AuthUser {
 
 // Entity interfaces
 export interface Tenant {
-  tenant_id: string
-  tenant_name: string
-  created_at: string
-  updated_at: string
+  tenantId: string
+  name: string
+  email: string
+  password: string
+  subscriptionId: string
+  country: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface User {
@@ -144,6 +148,16 @@ export interface Template {
   id: string;
   name: string;
 }
+
+export interface Subscription{
+  id: string;
+  name: string;
+  noOfLocations: number,
+  noOfAssets: number,
+  validityDays: number,
+  createdAt: string,
+}
+
 
 // Zod schemas for form validation
 export const assetSchema = z.object({

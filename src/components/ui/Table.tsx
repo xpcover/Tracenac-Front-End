@@ -30,7 +30,6 @@ interface DataTableProps<TData, TValue> {
   additionalFilters?: React.ReactNode;
 }
 
-
 export function DataTable<TData, TValue>({
   columns,
   url,
@@ -45,9 +44,6 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [search, setSearch] = useState("");
-
-
-  const userRole = localStorage.getItem("userRole");
 
   const [{ pageIndex, pageSize }, setPagination] = useState({
     pageIndex: 0,
@@ -66,7 +62,7 @@ export function DataTable<TData, TValue>({
   });
 
   useEffect(() => {
-    dispatch(setTableData(apiData));
+    if (apiData) dispatch(setTableData(apiData));
   }, [apiData]);
 
   const [filteredData, setFilteredData] = useState(tableData);
@@ -117,7 +113,7 @@ export function DataTable<TData, TValue>({
     meta,
   });
 
-   if (isLoading) return <h4>Loading...</h4>;
+  if (isLoading) return <h4>Loading...</h4>;
 
   return (
     <div className="space-y-4">
@@ -133,7 +129,7 @@ export function DataTable<TData, TValue>({
       <div className="rounded-md border">
         <table className="w-full">
           <thead>
-          {[...table.getHeaderGroups()].reverse().map((headerGroup) => (
+            {[...table.getHeaderGroups()].reverse().map((headerGroup) => (
               <tr
                 key={headerGroup.id}
                 className="border-b bg-gray-50 transition-colors"
@@ -162,52 +158,54 @@ export function DataTable<TData, TValue>({
             ))}
           </thead>
           <tbody>
-          {[...table.getRowModel().rows].reverse().map((row) => (
-  <tr key={row.id} className="border-b">
-    {row.getVisibleCells().map((cell) => (
-      <td key={cell.id} className="p-4">
-        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-      </td>
-    ))}
+            {[...table.getRowModel().rows].reverse().map((row) => (
+              <tr key={row.id} className="border-b">
+                {row.getVisibleCells().map((cell) => (
+                  <td key={cell.id} className="p-4">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
 
-    <td className="p-4">
-      <div className="flex gap-2">
-        {localStorage.getItem("userRole") === "tenant" || localStorage.getItem("userRole") === "admin"? (
-          <>
-            {onEdit && (
-              <button
-                onClick={() => onEdit(row.original)}
-                className="text-blue-600 hover:text-blue-800"
-              >
-                Edit
-              </button>
-            )}
-            {onDelete && (
-              <button
-                onClick={() => onDelete(row.original)}
-                className="text-red-600 hover:text-red-800"
-              >
-                Delete
-              </button>
-            )}
-          <button 
-           onClick={() => onView(row.original)}
-           className="text-green-600 hover:text-green-800">
-            View
-          </button>
-          </>
-        ) : (
-          <button 
-           onClick={() => onView(row.original)}
-           className="text-green-600 hover:text-green-800">
-            View
-          </button>
-        )}
-      </div>
-    </td>
-  </tr>
-))}
-
+                <td className="p-4">
+                  <div className="flex gap-2">
+                    {localStorage.getItem("userRole") === "tenant" ||
+                    localStorage.getItem("userRole") === "admin" ? (
+                      <>
+                        {onEdit && (
+                          <button
+                            onClick={() => onEdit(row.original)}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            Edit
+                          </button>
+                        )}
+                        {onDelete && (
+                          <button
+                            onClick={() => onDelete(row.original)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            Delete
+                          </button>
+                        )}
+                        {onView && <button
+                          onClick={() => onView(row.original)}
+                          className="text-green-600 hover:text-green-800"
+                        >
+                          View
+                        </button>}
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => onView(row.original)}
+                        className="text-green-600 hover:text-green-800"
+                      >
+                        View
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>

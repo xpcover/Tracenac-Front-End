@@ -5,11 +5,14 @@ import { cn } from '@/lib/utils'
 import { menuItems } from '@/lib/menu'
 import { admintems } from '@/lib/adminMenu'
 import { mockUser, hasAnyPermission } from '@/lib/auth'
+import { useSelector } from 'react-redux'
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const [expandedMenus, setExpandedMenus] = useState<string[]>([])
   const [isAdmin, setIsAdmin] = useState(false)
+  
+  const { user } = useSelector(state => state.auth)
 
  useEffect(() => {
     setIsAdmin(localStorage.getItem('userRole') === 'admin')

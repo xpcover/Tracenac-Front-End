@@ -1,12 +1,11 @@
 import { InputHTMLAttributes, forwardRef } from 'react'
 import { cn } from '@/lib/utils'
 import { ErrorMessage } from './ErrorMessage'
-import { FieldError } from 'react-hook-form'
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   isEditable?: boolean
   label?: string
-  error?: FieldError
+  error?: string
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
@@ -27,10 +26,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           'flex h-10 w-full rounded-md border border-gray-200 px-3 py-2 text-sm ring-offset-white',
           'file:border-0 file:bg-transparent file:text-sm file:font-medium',
           'placeholder:text-gray-500',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1',
+          'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-1',
           'disabled:cursor-not-allowed disabled:opacity-50',
           isEditable ? 'bg-gray-50' : 'bg-white',
-          error && 'border-red-500 focus-visible:ring-red-500',
+          error && 'border-red-500 focus-visible:ring-0',
           className
         )}
         {...props}
@@ -40,7 +39,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     if (label) {
       return (
         <div className="space-y-1">
-          <label className="block text-sm font-medium text-gray-700">
+          <label htmlFor={props?.id} className="block text-sm font-medium text-gray-700">
             {label}
           </label>
           {inputElement}

@@ -50,7 +50,6 @@ export default function LoginForm() {
       dispatch(setUserInfo(msg))
       Cookies.set('token', msg?.token);
       localStorage.setItem('token', msg?.token);
-      localStorage.setItem('userRole', 'admin');
       toast.success('Login successful');
       navigate('/dashboard');
     },
@@ -82,7 +81,6 @@ export default function LoginForm() {
                 placeholder="Email"
                 className="pl-10"
                 {...register('email')}
-                error={errors.email}
               />
               <ErrorMessage>{errors.email?.message}</ErrorMessage>
             </div>
@@ -94,7 +92,6 @@ export default function LoginForm() {
                 placeholder="Password"
                 className="pl-10"
                 {...register('password')}
-                error={errors.password}
               />
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>

@@ -1,62 +1,77 @@
-import { useState } from 'react'
-import { format } from 'date-fns'
-import { createColumnHelper } from '@tanstack/react-table'
-import { DataTable } from '@/components/ui/Table'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { Modal } from '@/components/ui/Modal'
-import { Tenant } from '@/lib/types'
-import TenantForm from './TenantForm'
+import { useState } from "react";
+import { format } from "date-fns";
+import { createColumnHelper } from "@tanstack/react-table";
+import { DataTable } from "@/components/ui/Table";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Modal } from "@/components/ui/Modal";
+import { Tenant } from "@/lib/types";
+import TenantForm from "./TenantForm";
+import { useMutation } from "@tanstack/react-query";
+import { dataTableService } from "@/services/dataTable.service";
+import toast from "react-hot-toast";
 
-const columnHelper = createColumnHelper<Tenant>()
+const columnHelper = createColumnHelper<Tenant>();
 
 const columns = [
-  columnHelper.accessor('tenant_id', {
-    header: 'Tenant ID',
+  columnHelper.accessor("tenantId", {
+    header: "Tenant ID",
     cell: (info) => info.getValue(),
   }),
-  columnHelper.accessor('tenant_name', {
-    header: 'Name',
+  columnHelper.accessor("name", {
+    header: "Name",
     cell: (info) => info.getValue(),
   }),
-  columnHelper.accessor('created_at', {
-    header: 'Created At',
-    cell: (info) => format(new Date(info.getValue()), 'PPp'),
+  columnHelper.accessor("email", {
+    header: "Email",
+    cell: (info) => info.getValue(),
   }),
-  columnHelper.accessor('updated_at', {
-    header: 'Updated At',
-    cell: (info) => format(new Date(info.getValue()), 'PPp'),
+  columnHelper.accessor("createdAt", {
+    header: "Created At",
+    cell: (info) => format(new Date(info.getValue()), "PPp"),
   }),
-]
-
-// Mock data - In a real app, this would come from an API
-const mockTenants: Tenant[] = [
-  {
-    tenant_id: '1',
-    tenant_name: 'Acme Corp',
-    created_at: '2024-03-10T10:00:00Z',
-    updated_at: '2024-03-10T10:00:00Z',
-  },
-  {
-    tenant_id: '2',
-    tenant_name: 'TechCo',
-    created_at: '2024-03-09T15:30:00Z',
-    updated_at: '2024-03-10T09:15:00Z',
-  },
-]
+  columnHelper.accessor("updatedAt", {
+    header: "Updated At",
+    cell: (info) => format(new Date(info.getValue()), "PPp"),
+  }),
+];
 
 export default function TenantsPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingTenant, setEditingTenant] = useState<Tenant | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
+
+  const createMutation = useMutation({
+    mutationFn: (data: Record<string, string>) =>
+      dataTableService.createData("/tenant/create", data),
+    onSuccess: () => {
+      toast.success("Tenant created successfully");
+      setIsModalOpen(false);
+    },
+    onError: () => {
+      toast.error("Failed to create Tenant");
+    },
+  });
+  const editMutation = useMutation({
+    mutationFn: (data: Record<string, string>) =>
+      dataTableService.createData("/tenant/create", data),
+    onSuccess: () => {
+      toast.success("Tenant updated successfully");
+      setEditingTenant(null);
+      setIsModalOpen(false);
+    },
+    onError: () => {
+      toast.error("Failed to update Tenant");
+    },
+  });
 
   const handleEdit = (tenant: Tenant) => {
-    setEditingTenant(tenant)
-    setIsModalOpen(true)
-  }
+    setEditingTenant(tenant);
+    setIsModalOpen(true);
+  };
 
   const handleDelete = (tenant: Tenant) => {
     // In a real app, this would make an API call
-    console.log('Delete tenant:', tenant)
-  }
+    console.log("Delete tenant:", tenant);
+  };
 
   return (
     <div>
@@ -64,36 +79,34 @@ export default function TenantsPage() {
         title="Tenants"
         description="Manage your organization's tenants"
         action={{
-          label: 'Add Tenant',
+          label: "Add Tenant",
           onClick: () => setIsModalOpen(true),
         }}
       />
 
       <DataTable
         columns={columns}
-        data={mockTenants}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        url="/tenant/get-clients"
       />
 
       <Modal
         isOpen={isModalOpen}
         onClose={() => {
-          setIsModalOpen(false)
-          setEditingTenant(null)
+          setIsModalOpen(false);
+          setEditingTenant(null);
         }}
-        title={editingTenant ? 'Edit Tenant' : 'Add Tenant'}
+        title={editingTenant ? "Edit Tenant" : "Add Tenant"}
       >
         <TenantForm
           tenant={editingTenant}
           onSubmit={(data) => {
-            // In a real app, this would make an API call
-            console.log('Form submitted:', data)
-            setIsModalOpen(false)
-            setEditingTenant(null)
+            if (editingTenant) editMutation.mutate(data);
+            else createMutation.mutate(data);
           }}
         />
       </Modal>
     </div>
-  )
+  );
 }

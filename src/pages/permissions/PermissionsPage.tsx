@@ -3,8 +3,6 @@ import { Switch } from '@headlessui/react'
 import { cn } from '@/lib/utils'
 import { menuItems } from '@/lib/menu'
 import Button from '@/components/ui/Button'
-import { Modal } from '@/components/ui/Modal'
-import Input from '@/components/ui/Input'
 import { Role } from '@/lib/types'
 import { axiosInstance } from '@/config/axiosInstance'
 import toast from 'react-hot-toast'
@@ -23,8 +21,6 @@ export default function PermissionsPage() {
       console.error(error);
     }
   }
-
-  console.log(selectedRole)
 
   useEffect(()=>{
     fetchRole()

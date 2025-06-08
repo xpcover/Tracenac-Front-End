@@ -4,6 +4,7 @@ import { lazy } from 'react';
 import { Navigate } from 'react-router-dom';
 import { PATHS } from '@/constants/paths';
 import { PrivateRoutesWithLayout, RouteConfig } from '@/lib/types';
+import SubscriptionList from '@/pages/subscriptions/SubscriptionList';
 
 // Layout
 const Layout = lazy(() => import('../components/layout/Layout'));
@@ -256,6 +257,10 @@ export const privateRoutes: RouteConfig[] = [
   {
     path: PATHS.PRIVATE.ANALYZE_PACK,
     element: <PackChain />,
+  },
+  {
+    path: PATHS.PRIVATE.SUBSCRIPTIONS,
+    element: <SubscriptionList />,
   }
 ];
 
